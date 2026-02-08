@@ -8,6 +8,8 @@
 extern "C" {
 void app_main(void) {
         Communication::SerialManager serial_manager;
+        serial_manager.add_listener(
+            [](std::string value) { printf("received: %s\n", value.c_str()); });
 
         uint32_t counter = 0;
         TickType_t last_wake_time = xTaskGetTickCount();
