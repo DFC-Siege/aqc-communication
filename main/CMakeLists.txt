@@ -1,3 +1,3 @@
-idf_component_register(SRCS "sensor.cpp"
-                       INCLUDE_DIRS "."
-                       PRIV_REQUIRES driver)
+idf_component_register(SRCS "main.cpp"
+                       PRIV_REQUIRES spi_flash
+                       INCLUDE_DIRS "")

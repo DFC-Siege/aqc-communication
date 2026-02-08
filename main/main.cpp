@@ -1,38 +1,49 @@
+#include <esp_chip_info.h>
+#include <esp_flash.h>
+#include <esp_system.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#include <inttypes.h>
+#include <sdkconfig.h>
 #include <stdio.h>
-#include <string.h>
 
-#include "driver/uart.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
+extern "C" {
+void app_main(void) {
+        printf("Hello world!\n");
 
-#define I2C_MASTER_SCL_IO 9
-#define I2C_MASTER_SDA_IO 8
-#define I2C_MASTER_NUM I2C_NUM_0
-#define I2C_MASTER_FREQ_HZ 100000
-#define SCD40_SENSOR_ADDR 0x62
+        esp_chip_info_t chip_info;
+        uint32_t flash_size;
+        esp_chip_info(&chip_info);
+        printf("This is %s chip with %d CPU core(s), %s%s%s%s, ",
+               CONFIG_IDF_TARGET, chip_info.cores,
+               (chip_info.features & CHIP_FEATURE_WIFI_BGN) ? "WiFi/" : "",
+               (chip_info.features & CHIP_FEATURE_BT) ? "BT" : "",
+               (chip_info.features & CHIP_FEATURE_BLE) ? "BLE" : "",
+               (chip_info.features & CHIP_FEATURE_IEEE802154)
+                   ? ", 802.15.4 (Zigbee/Thread)"
+                   : "");
 
-#define UART_NUM UART_NUM_1
-#define TX_PIN 7
-#define RX_PIN 6
-
-void init_hardware() {
-        uart_config_t uart_conf = {.baud_rate = 115200,
-                                   .data_bits = UART_DATA_8_BITS,
-                                   .parity = UART_PARITY_DISABLE,
-                                   .stop_bits = UART_STOP_BITS_1,
-                                   .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
-                                   .rx_flow_ctrl_thresh = 122,
-                                   .source_clk = UART_SCLK_DEFAULT,
-                                   .flags = {}};
-        uart_driver_install(UART_NUM, 256, 0, 0, NULL, 0);
-        uart_param_config(UART_NUM, &uart_conf);
-        uart_set_pin(UART_NUM, TX_PIN, RX_PIN, UART_PIN_NO_CHANGE,
-                     UART_PIN_NO_CHANGE);
-}
-
-extern "C" void app_main(void) {
-        init_hardware();
-
-        while (1) {
+        unsigned major_rev = chip_info.revision / 100;
+        unsigned minor_rev = chip_info.revision % 100;
+        printf("silicon revision v%d.%d, ", major_rev, minor_rev);
+        if (esp_flash_get_size(NULL, &flash_size) != ESP_OK) {
+                printf("Get flash size failed");
+                return;
         }
+
+        printf("%" PRIu32 "MB %s flash\n", flash_size / (uint32_t)(1024 * 1024),
+               (chip_info.features & CHIP_FEATURE_EMB_FLASH) ? "embedded"
+                                                             : "external");
+
+        printf("Minimum free heap size: %" PRIu32 " bytes\n",
+               esp_get_minimum_free_heap_size());
+
+        for (int i = 10; i >= 0; i--) {
+                printf("Restarting in %d seconds...\n", i);
+                vTaskDelay(1000 / portTICK_PERIOD_MS);
+        }
+        printf("Restarting now.\n");
+        fflush(stdout);
+        esp_restart();
+}
 }
