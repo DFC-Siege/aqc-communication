@@ -1,12 +1,30 @@
 #include <cstdio>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
-#include <string>
+#include <nvs_flash.h>
 
+#include "ble/ble_manager.hpp"
 #include "serial/serial_manager.hpp"
 
 extern "C" {
 void app_main(void) {
+        esp_err_t ret = nvs_flash_init();
+        if (ret == ESP_ERR_NVS_NO_FREE_PAGES ||
+            ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+                nvs_flash_erase();
+                nvs_flash_init();
+        }
+
+        auto &ble = BLE::BLEManager::instance();
+        ble.onConnectionChanged([](bool connected) {
+                printf("BLE %s\n", connected ? "connected" : "disconnected");
+        });
+        ble.onReceive([](std::span<const uint8_t> data) {
+                printf("BLE received: %.*s\n", static_cast<int>(data.size()),
+                       data.data());
+        });
+        ble.begin("esp32");
+
         Communication::SerialManager serial_manager;
         serial_manager.add_listener(
             [](std::string value) { printf("received: %s\n", value.c_str()); });
@@ -25,6 +43,14 @@ void app_main(void) {
                             "Count: " + std::to_string(counter++) + "\n";
                         printf("sending: %s", str.c_str());
                         serial_manager.send(str);
+
+                        if (ble.isConnected()) {
+                                auto bytes = std::span<const uint8_t>(
+                                    reinterpret_cast<const uint8_t *>(
+                                        str.data()),
+                                    str.size());
+                                ble.send(bytes);
+                        }
                 }
 
                 vTaskDelay(1);
