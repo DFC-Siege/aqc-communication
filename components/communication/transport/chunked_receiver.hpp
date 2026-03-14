@@ -11,6 +11,7 @@ class ChunkedReceiver : public IReceiver {
       public:
         ChunkedReceiver(uint16_t mtu, uint8_t max_attempts);
         Result::Result<bool> start(uint8_t session_id, uint8_t command,
+                                   std::span<const uint8_t> payload,
                                    SendCallback sender) override;
         Result::Result<bool> receive(std::span<const uint8_t> data) override;
 

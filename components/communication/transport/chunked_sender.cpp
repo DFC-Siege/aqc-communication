@@ -1,5 +1,6 @@
 #include <cstdint>
 #include <esp_crc.h>
+#include <string_view>
 
 #include "chunked_sender.hpp"
 #include "result.hpp"
@@ -10,12 +11,15 @@ ChunkedSender::ChunkedSender(uint16_t mtu, uint8_t max_attempts)
     : mtu(mtu), max_attempts(max_attempts) {
 }
 
-Result::Result<bool> ChunkedSender::send(uint8_t session_id, uint8_t command,
-                                         std::span<const uint8_t> data,
-                                         SendCallback sender) {
+Result::Result<bool>
+ChunkedSender::send(uint8_t session_id, uint8_t command,
+                    std::span<const uint8_t> data, SendCallback sender,
+                    ISender::CompleteCallback on_complete) {
         this->session_id = session_id;
         this->command = command;
         this->sender = sender;
+        this->on_complete = on_complete;
+
         const auto result = create_chunks(data);
         if (result.failed()) {
                 return Result::err(result.error());
@@ -45,6 +49,11 @@ Result::Result<bool> ChunkedSender::receive(std::span<const uint8_t> data) {
                 }
                 const auto chunk = repeat_result.value();
                 return sender(chunk.to_buf());
+        }
+
+        if (current_index >= chunked_data.size()) {
+                on_complete(command);
+                return Result::ok();
         }
 
         const auto next_result = get_next();

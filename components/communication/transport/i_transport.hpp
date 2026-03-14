@@ -9,8 +9,6 @@
 #include <vector>
 
 namespace Transport {
-using ReceiveCallback =
-    std::function<Result::Result<bool>(std::span<const uint8_t>)>;
 using SendCallback =
     std::function<Result::Result<bool>(std::span<const uint8_t>)>;
 
@@ -84,22 +82,32 @@ struct Chunk {
 
 class ISender {
       public:
+        using CompleteCallback = std::function<void(uint8_t command)>;
+
         virtual ~ISender() = default;
         virtual Result::Result<bool> send(uint8_t session_id, uint8_t command,
                                           std::span<const uint8_t> data,
-                                          SendCallback sender) = 0;
+                                          SendCallback sender,
+                                          CompleteCallback on_complete) = 0;
         virtual Result::Result<bool> receive(std::span<const uint8_t> data) = 0;
 
       protected:
         uint8_t session_id;
         uint8_t command;
+        SendCallback sender;
+        CompleteCallback on_complete;
 };
 
 class IReceiver {
+        using CompleteCallback = std::function<void(
+            uint8_t command, Result::Result<std::vector<uint8_t>> result)>;
+
       public:
         virtual ~IReceiver() = default;
         virtual Result::Result<bool> start(uint8_t session_id, uint8_t command,
-                                           SendCallback sender) = 0;
+                                           std::span<const uint8_t> payload,
+                                           SendCallback sender,
+                                           CompleteCallback on_complete) = 0;
         virtual Result::Result<bool> receive(std::span<const uint8_t> data) = 0;
 
       protected:
