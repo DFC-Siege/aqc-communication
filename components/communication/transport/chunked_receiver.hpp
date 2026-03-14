@@ -23,8 +23,7 @@ class ChunkedReceiver : public IReceiver {
         uint8_t max_attempts;
         uint8_t current_attempt = 0;
 
-        std::vector<uint8_t>
-        reconstruct_data(std::span<const Chunk> chunks) const;
+        std::vector<uint8_t> reconstruct_data(std::vector<Chunk> chunks) const;
         Result::Result<bool> ack(bool success);
 };
 } // namespace Transport

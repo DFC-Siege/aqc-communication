@@ -23,6 +23,7 @@ ChunkedReceiver::start(uint8_t session_id, uint8_t command,
         this->command = command;
         this->sender = sender;
         this->on_complete = on_complete;
+        received_chunks.clear();
 
         const auto checksum = esp_crc16_le(0, payload.data(), payload.size());
         const auto chunk =
@@ -44,7 +45,7 @@ Result::Result<bool> ChunkedReceiver::receive(std::span<const uint8_t> data) {
         const auto chunk = chunk_result.value();
         received_chunks.push_back(chunk);
 
-        if (chunk.index >= chunk.total_chunks) {
+        if (chunk.index >= chunk.total_chunks - 1) {
                 on_complete(command, reconstruct_data(received_chunks));
         }
 
@@ -52,7 +53,11 @@ Result::Result<bool> ChunkedReceiver::receive(std::span<const uint8_t> data) {
 }
 
 std::vector<uint8_t>
-ChunkedReceiver::reconstruct_data(std::span<const Chunk> chunks) const {
+ChunkedReceiver::reconstruct_data(std::vector<Chunk> chunks) const {
+        std::sort(
+            chunks.begin(), chunks.end(),
+            [](const Chunk &a, const Chunk &b) { return a.index < b.index; });
+
         std::vector<uint8_t> reconstruct_data;
         for (const auto &chunk : chunks) {
                 reconstruct_data.insert(reconstruct_data.end(),
@@ -64,7 +69,16 @@ ChunkedReceiver::reconstruct_data(std::span<const Chunk> chunks) const {
 }
 
 Result::Result<bool> ChunkedReceiver::ack(bool success) {
-        const auto index = std::max<uint16_t>(received_chunks.size() - 1, 0);
+        if (!success && ++current_attempt > max_attempts) {
+                return Result::err("max attempts reached");
+        } else if (success) {
+                current_attempt = 0;
+        }
+
+        const uint16_t index =
+            received_chunks.empty()
+                ? 0
+                : static_cast<uint16_t>(received_chunks.size() - 1);
         const auto ack = Ack{
             index,
             session_id,

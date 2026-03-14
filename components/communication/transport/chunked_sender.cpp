@@ -19,6 +19,7 @@ ChunkedSender::send(uint8_t session_id, uint8_t command,
         this->command = command;
         this->sender = sender;
         this->on_complete = on_complete;
+        chunked_data.clear();
 
         const auto result = create_chunks(data);
         if (result.failed()) {
