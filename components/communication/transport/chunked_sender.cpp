@@ -12,8 +12,7 @@ ChunkedSender::ChunkedSender(uint16_t mtu, uint8_t max_attempts)
 
 Result::Result<bool> ChunkedSender::send(uint8_t session_id, uint8_t command,
                                          std::span<const uint8_t> data,
-                                         SendCallback sender,
-                                         ReceiveCallback receiver) {
+                                         SendCallback sender) {
         this->session_id = session_id;
         this->command = command;
         this->sender = sender;

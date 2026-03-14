@@ -85,11 +85,9 @@ struct Chunk {
 class ISender {
       public:
         virtual ~ISender() = default;
-
         virtual Result::Result<bool> send(uint8_t session_id, uint8_t command,
                                           std::span<const uint8_t> data,
-                                          SendCallback send_chunk,
-                                          ReceiveCallback on_ack) = 0;
+                                          SendCallback sender) = 0;
         virtual Result::Result<bool> receive(std::span<const uint8_t> data) = 0;
 
       protected:
@@ -100,6 +98,13 @@ class ISender {
 class IReceiver {
       public:
         virtual ~IReceiver() = default;
+        virtual Result::Result<bool> start(uint8_t session_id, uint8_t command,
+                                           SendCallback sender) = 0;
+        virtual Result::Result<bool> receive(std::span<const uint8_t> data) = 0;
+
+      protected:
+        uint8_t session_id;
+        uint8_t command;
 };
 
 class ITransporter {
