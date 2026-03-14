@@ -20,6 +20,8 @@ ChunkedSender::send(uint8_t session_id, uint8_t command,
         this->sender = sender;
         this->on_complete = on_complete;
         chunked_data.clear();
+        current_attempt = 0;
+        current_index = 0;
 
         const auto result = create_chunks(data);
         if (result.failed()) {
@@ -27,7 +29,7 @@ ChunkedSender::send(uint8_t session_id, uint8_t command,
         }
         chunked_data = result.value();
 
-        const auto chunk_result = repeat();
+        const auto chunk_result = get_chunk();
         if (chunk_result.failed()) {
                 return Result::err(chunk_result.error());
         }
@@ -52,7 +54,11 @@ Result::Result<bool> ChunkedSender::receive(std::span<const uint8_t> data) {
                 return sender(chunk.to_buf());
         }
 
-        if (current_index >= chunked_data.size()) {
+        if (chunked_data.empty()) {
+                return Result::err("chunked data is empty");
+        }
+
+        if (current_index == chunked_data.size() - 1) {
                 on_complete(command);
                 return Result::ok();
         }
@@ -68,10 +74,10 @@ Result::Result<bool> ChunkedSender::receive(std::span<const uint8_t> data) {
 
 Result::Result<std::vector<Chunk>>
 ChunkedSender::create_chunks(std::span<const uint8_t> data) const {
-        const auto payload_size = mtu - Chunk::HEADER_SIZE;
-        if (payload_size <= 0) {
+        if (mtu <= Chunk::HEADER_SIZE) {
                 return Result::err("mtu too small");
         }
+        const auto payload_size = mtu - Chunk::HEADER_SIZE;
 
         const auto total_chunks = static_cast<uint16_t>(
             (data.size() + payload_size - 1) / payload_size);
@@ -90,6 +96,14 @@ ChunkedSender::create_chunks(std::span<const uint8_t> data) const {
                                     checksum, session_id, command);
         }
 
+        if (chunks.empty()) {
+                const auto payload = std::vector<uint8_t>();
+                const auto checksum =
+                    esp_crc16_le(0, payload.data(), payload.size());
+                chunks.emplace_back(std::move(payload), 0, 1, checksum,
+                                    session_id, command);
+        }
+
         return Result::ok(std::move(chunks));
 }
 
@@ -99,16 +113,19 @@ Result::Result<Chunk> ChunkedSender::get_next() {
         }
 
         current_attempt = 0;
-        return Result::ok(chunked_data.at(current_index));
+        return get_chunk();
 }
 
 Result::Result<Chunk> ChunkedSender::repeat() {
-        if (current_index >= chunked_data.size()) {
-                return Result::err("index out of bound repeating");
-        }
-
         if (++current_attempt >= max_attempts) {
                 return Result::err("max attempts reached");
+        }
+        return get_chunk();
+}
+
+Result::Result<Chunk> ChunkedSender::get_chunk() {
+        if (current_index >= chunked_data.size()) {
+                return Result::err("index out of bound repeating");
         }
 
         return Result::ok(chunked_data.at(current_index));

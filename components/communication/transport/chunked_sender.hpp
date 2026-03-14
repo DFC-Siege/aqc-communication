@@ -28,5 +28,6 @@ class ChunkedSender : public ISender {
         create_chunks(std::span<const uint8_t> data) const;
         Result::Result<Chunk> get_next();
         Result::Result<Chunk> repeat();
+        Result::Result<Chunk> get_chunk();
 };
 } // namespace Transport
