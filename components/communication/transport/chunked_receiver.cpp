@@ -23,6 +23,7 @@ ChunkedReceiver::start(uint8_t session_id, uint8_t command,
         this->command = command;
         this->sender = sender;
         this->on_complete = on_complete;
+        current_attempt = 0;
         received_chunks.clear();
 
         const auto checksum = esp_crc16_le(0, payload.data(), payload.size());
@@ -42,11 +43,24 @@ Result::Result<bool> ChunkedReceiver::receive(std::span<const uint8_t> data) {
         if (chunk_result.failed()) {
                 return ack(false);
         }
+
         const auto chunk = chunk_result.value();
+        if (chunk.total_chunks == 0 || chunk.index >= chunk.total_chunks) {
+                return ack(false);
+        }
+
+        const auto duplicate =
+            std::any_of(received_chunks.begin(), received_chunks.end(),
+                        [&](const Chunk &c) { return c.index == chunk.index; });
+        if (duplicate) {
+                return ack(true);
+        }
+
         received_chunks.push_back(chunk);
 
-        if (chunk.index >= chunk.total_chunks - 1) {
+        if (chunk.index == chunk.total_chunks - 1) {
                 on_complete(command, reconstruct_data(received_chunks));
+                received_chunks.clear();
         }
 
         return ack(true);
