@@ -1,12 +1,14 @@
 #pragma once
 
-#include "result.hpp"
 #include <cstdint>
+#include <esp_crc.h>
 #include <functional>
 #include <memory>
 #include <span>
 #include <string_view>
 #include <vector>
+
+#include "result.hpp"
 
 namespace Transport {
 using SendCallback =
@@ -60,14 +62,14 @@ struct Chunk {
         }
 
         static Result::Result<Chunk> from_buf(std::span<const uint8_t> buf) {
-                if (buf.size() < HEADER_SIZE) {
+                if (buf.size() < HEADER_SIZE)
                         return Result::err("buffer too small");
-                }
 
                 auto pull16 = [&](size_t offset) -> uint16_t {
                         return static_cast<uint16_t>(buf[offset] |
                                                      (buf[offset + 1] << 8));
                 };
+
                 Chunk chunk;
                 chunk.index = pull16(0);
                 chunk.total_chunks = pull16(2);
@@ -76,6 +78,12 @@ struct Chunk {
                 chunk.command = buf[7];
                 chunk.payload =
                     std::vector<uint8_t>(buf.begin() + HEADER_SIZE, buf.end());
+
+                const auto computed =
+                    esp_crc16_le(0, chunk.payload.data(), chunk.payload.size());
+                if (computed != chunk.checksum)
+                        return Result::err("checksum mismatch");
+
                 return Result::ok(std::move(chunk));
         }
 };

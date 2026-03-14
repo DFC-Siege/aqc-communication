@@ -45,21 +45,22 @@ Result::Result<bool> ChunkedReceiver::receive(std::span<const uint8_t> data) {
         received_chunks.push_back(chunk);
 
         if (chunk.index >= chunk.total_chunks) {
-                const auto reconstruct_result =
-                    reconstruct_data(received_chunks);
-                if (reconstruct_result.failed()) {
-                        return Result::err(reconstruct_result.error());
-                }
-                const auto reconstructed_data = reconstruct_result.value();
-                on_complete(command, reconstructed_data);
+                on_complete(command, reconstruct_data(received_chunks));
         }
 
         return ack(true);
 }
 
-Result::Result<std::vector<uint8_t>>
+std::vector<uint8_t>
 ChunkedReceiver::reconstruct_data(std::span<const Chunk> chunks) const {
-        return Result::ok(std::vector<uint8_t>{});
+        std::vector<uint8_t> reconstruct_data;
+        for (const auto &chunk : chunks) {
+                reconstruct_data.insert(reconstruct_data.end(),
+                                        chunk.payload.begin(),
+                                        chunk.payload.end());
+        }
+
+        return reconstruct_data;
 }
 
 Result::Result<bool> ChunkedReceiver::ack(bool success) {
