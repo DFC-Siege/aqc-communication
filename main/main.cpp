@@ -5,10 +5,9 @@
 #include <nvs_flash.h>
 
 #include "ble/ble_manager.hpp"
-#include "logging/i_logger.hpp"
-#include "logging/logger.hpp"
-#include "logging/serial_logger.hpp"
+#include "logger.hpp"
 #include "serial/serial_manager.hpp"
+#include "serial_logger.hpp"
 
 extern "C" {
 void app_main(void) {
@@ -19,8 +18,8 @@ void app_main(void) {
                 nvs_flash_init();
         }
 
-        Logging::Logger::instance().set_logger(
-            std::make_unique<Logging::SerialLogger>(Logging::LogLevel::Info));
+        Logging::Logger::set(std::make_unique<Logging::SerialLogger>());
+        Logging::logger().println("yee");
 
         auto &ble = BLE::BLEManager::instance();
         ble.on_connection_changed([](bool connected) {

@@ -2,6 +2,7 @@
 #include "i_logger.hpp"
 
 namespace Logging {
+std::unique_ptr<ILogger> Logger::logger = std::make_unique<NullLogger>();
 
 ILogger &Logger::instance() {
         assert(logger != nullptr && "No logger set");

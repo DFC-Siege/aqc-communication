@@ -2,9 +2,6 @@
 #include "i_logger.hpp"
 
 namespace Logging {
-SerialLogger::SerialLogger(LogLevel level) : level(level) {
-}
-
 void SerialLogger::print(LogLevel level, std::string_view tag,
                          std::string_view value) {
         if (!check_level(level)) {
@@ -24,14 +21,6 @@ void SerialLogger::println(LogLevel level, std::string_view tag,
 
         print(level, tag, value);
         ::printf("\n");
-}
-
-void SerialLogger::set_level(LogLevel level) {
-        this->level = level;
-}
-
-LogLevel SerialLogger::get_level() const {
-        return level;
 }
 
 bool SerialLogger::check_level(LogLevel level) {

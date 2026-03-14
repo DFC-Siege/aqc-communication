@@ -33,15 +33,15 @@ class ILogger {
                            std::string_view value) = 0;
         virtual void println(LogLevel level, std::string_view tag,
                              std::string_view value) = 0;
-        virtual void set_level(LogLevel level) = 0;
-        virtual LogLevel get_level() const = 0;
+        void set_level(LogLevel level);
+        LogLevel get_level() const;
 
         void print(std::string_view value) {
-                print(LogLevel::Info, "", value);
+                print(level, "", value);
         }
 
         void print(std::string_view tag, std::string_view value) {
-                print(LogLevel::Info, tag, value);
+                print(level, tag, value);
         }
 
         void print(LogLevel level, std::string_view value) {
@@ -73,11 +73,11 @@ class ILogger {
         }
 
         void println(std::string_view value) {
-                println(LogLevel::Info, "", value);
+                println(level, "", value);
         }
 
         void println(std::string_view tag, std::string_view value) {
-                println(LogLevel::Info, tag, value);
+                println(level, tag, value);
         }
 
         void println(LogLevel level, std::string_view value) {
@@ -107,5 +107,8 @@ class ILogger {
         void println(std::format_string<Args...> fmt, Args &&...args) {
                 println(std::format(fmt, std::forward<Args>(args)...));
         }
+
+      protected:
+        LogLevel level;
 };
 } // namespace Logging
