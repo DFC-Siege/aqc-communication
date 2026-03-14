@@ -14,28 +14,28 @@ namespace BLE {
 
 static constexpr char TAG[] = "BLEManager";
 
-uint16_t BLEManager::txAttrHandle = 0;
+uint16_t BLEManager::tx_attr_handle = 0;
 
-const ble_gatt_svc_def BLEManager::gattServices[] = {
+const ble_gatt_svc_def BLEManager::gatt_services[] = {
     {
         .type = BLE_GATT_SVC_TYPE_PRIMARY,
-        .uuid = &serviceUuid.u,
+        .uuid = &service_uuid.u,
         .characteristics =
             (ble_gatt_chr_def[]){
                 {
-                    .uuid = &rxUuid.u,
-                    .access_cb = BLEManager::onGattAccess,
+                    .uuid = &rx_uuid.u,
+                    .access_cb = BLEManager::on_gatt_access,
                     .arg = nullptr,
                     .descriptors = nullptr,
                     .flags = BLE_GATT_CHR_F_WRITE | BLE_GATT_CHR_F_WRITE_NO_RSP,
                 },
                 {
-                    .uuid = &txUuid.u,
-                    .access_cb = BLEManager::onGattAccess,
+                    .uuid = &tx_uuid.u,
+                    .access_cb = BLEManager::on_gatt_access,
                     .arg = nullptr,
                     .descriptors = nullptr,
                     .flags = BLE_GATT_CHR_F_NOTIFY,
-                    .val_handle = &txAttrHandle,
+                    .val_handle = &tx_attr_handle,
                 },
                 {0},
             },
@@ -43,16 +43,16 @@ const ble_gatt_svc_def BLEManager::gattServices[] = {
     {0},
 };
 
-void BLEManager::begin(std::string_view deviceName) {
+void BLEManager::begin(std::string_view device_name) {
         nimble_port_init();
 
-        ble_hs_cfg.sync_cb = []() { instance().startAdvertising(); };
+        ble_hs_cfg.sync_cb = []() { instance().start_advertising(); };
 
         ble_svc_gap_init();
         ble_svc_gatt_init();
-        ble_gatts_count_cfg(gattServices);
-        ble_gatts_add_svcs(gattServices);
-        ble_svc_gap_device_name_set(deviceName.data());
+        ble_gatts_count_cfg(gatt_services);
+        ble_gatts_add_svcs(gatt_services);
+        ble_svc_gap_device_name_set(device_name.data());
 
         nimble_port_freertos_init([](void *) {
                 nimble_port_run();
@@ -61,17 +61,17 @@ void BLEManager::begin(std::string_view deviceName) {
 }
 
 void BLEManager::send(std::span<const uint8_t> data) {
-        if (!isConnected())
+        if (!is_connected())
                 return;
 
         os_mbuf *om = ble_hs_mbuf_from_flat(data.data(), data.size());
         if (!om)
                 return;
 
-        ble_gatts_notify_custom(connHandle, txAttrHandle, om);
+        ble_gatts_notify_custom(conn_handle, tx_attr_handle, om);
 }
 
-void BLEManager::startAdvertising() {
+void BLEManager::start_advertising() {
         ble_hs_adv_fields fields = {};
         fields.flags = BLE_HS_ADV_F_DISC_GEN | BLE_HS_ADV_F_BREDR_UNSUP;
         fields.tx_pwr_lvl_is_present = 1;
@@ -89,28 +89,28 @@ void BLEManager::startAdvertising() {
         adv_params.disc_mode = BLE_GAP_DISC_MODE_GEN;
 
         ble_gap_adv_start(BLE_OWN_ADDR_PUBLIC, nullptr, BLE_HS_FOREVER,
-                          &adv_params, onGapEvent, nullptr);
+                          &adv_params, on_gap_event, nullptr);
 }
 
-int BLEManager::onGapEvent(ble_gap_event *event, void *) {
+int BLEManager::on_gap_event(ble_gap_event *event, void *) {
         auto &self = instance();
 
         switch (event->type) {
         case BLE_GAP_EVENT_CONNECT:
                 if (event->connect.status == 0) {
-                        self.connHandle = event->connect.conn_handle;
-                        if (self.connectionCallback)
-                                self.connectionCallback(true);
+                        self.conn_handle = event->connect.conn_handle;
+                        if (self.connection_callback)
+                                self.connection_callback(true);
                 } else {
-                        self.startAdvertising();
+                        self.start_advertising();
                 }
                 break;
 
         case BLE_GAP_EVENT_DISCONNECT:
-                self.connHandle = BLE_HS_CONN_HANDLE_NONE;
-                if (self.connectionCallback)
-                        self.connectionCallback(false);
-                self.startAdvertising();
+                self.conn_handle = BLE_HS_CONN_HANDLE_NONE;
+                if (self.connection_callback)
+                        self.connection_callback(false);
+                self.start_advertising();
                 break;
 
         case BLE_GAP_EVENT_MTU:
@@ -121,7 +121,7 @@ int BLEManager::onGapEvent(ble_gap_event *event, void *) {
         return 0;
 }
 
-int BLEManager::onGattAccess(uint16_t, uint16_t, ble_gatt_access_ctxt *ctxt,
+int BLEManager::on_gatt_access(uint16_t, uint16_t, ble_gatt_access_ctxt *ctxt,
                              void *) {
         auto &self = instance();
 
@@ -129,8 +129,8 @@ int BLEManager::onGattAccess(uint16_t, uint16_t, ble_gatt_access_ctxt *ctxt,
                 uint16_t len = OS_MBUF_PKTLEN(ctxt->om);
                 std::vector<uint8_t> buf(len);
                 ble_hs_mbuf_to_flat(ctxt->om, buf.data(), len, nullptr);
-                if (self.receiveCallback)
-                        self.receiveCallback(buf);
+                if (self.receive_callback)
+                        self.receive_callback(buf);
         }
 
         return 0;

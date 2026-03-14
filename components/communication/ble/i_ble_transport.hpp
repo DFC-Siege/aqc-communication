@@ -13,9 +13,9 @@ class IBLETransport {
       public:
         virtual ~IBLETransport() = default;
         virtual void send(std::span<const uint8_t> data) = 0;
-        virtual void onReceive(ReceiveCallback cb) = 0;
-        virtual void onConnectionChanged(ConnectionCallback cb) = 0;
-        virtual bool isConnected() const = 0;
+        virtual void on_receive(ReceiveCallback cb) = 0;
+        virtual void on_connection_changed(ConnectionCallback cb) = 0;
+        virtual bool is_connected() const = 0;
 };
 
 } // namespace BLE

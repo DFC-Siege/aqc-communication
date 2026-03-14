@@ -16,10 +16,10 @@ void app_main(void) {
         }
 
         auto &ble = BLE::BLEManager::instance();
-        ble.onConnectionChanged([](bool connected) {
+        ble.on_connection_changed([](bool connected) {
                 printf("BLE %s\n", connected ? "connected" : "disconnected");
         });
-        ble.onReceive([](std::span<const uint8_t> data) {
+        ble.on_receive([](std::span<const uint8_t> data) {
                 printf("BLE received: %.*s\n", static_cast<int>(data.size()),
                        data.data());
         });
@@ -44,7 +44,7 @@ void app_main(void) {
                         printf("sending: %s", str.c_str());
                         serial_manager.send(str);
 
-                        if (ble.isConnected()) {
+                        if (ble.is_connected()) {
                                 auto bytes = std::span<const uint8_t>(
                                     reinterpret_cast<const uint8_t *>(
                                         str.data()),
