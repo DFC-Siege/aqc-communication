@@ -15,9 +15,9 @@ void app_main(void) {
         Logging::Logger::set(std::make_unique<Logging::SerialLogger>());
 
         auto store_result = Storage::KV::NVSStore::init("default");
-        if (store_result.failed) {
+        if (store_result.failed()) {
                 Logging::logger().print_fmt("error initializing store: {}",
-                                            store_result.err);
+                                            store_result.error());
                 return;
         }
 

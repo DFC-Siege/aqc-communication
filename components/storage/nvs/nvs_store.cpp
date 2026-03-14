@@ -16,12 +16,13 @@ Result::Result<bool> NVSStore::try_init(int count) {
         case ESP_OK:
                 break;
         case ESP_ERR_NVS_NEW_VERSION_FOUND:
-        case ESP_ERR_NVS_NO_FREE_PAGES:
+        case ESP_ERR_NVS_NO_FREE_PAGES: {
                 if (count > MAX_INIT_TRIES) {
                         return Result::err("failed to init nvs after " +
                                            std::to_string(count) + " tries");
                 }
-                try_init(count++);
+                return NVSStore::try_init(count++);
+        }
         case ESP_ERR_NOT_FOUND:
                 return Result::err("no partition with label \"nvs\" found in "
                                    "the partition table");
@@ -68,14 +69,14 @@ Result::Result<bool> NVSStore::try_open() {
 
 Result::Result<NVSStore> NVSStore::init(std::string_view ns) {
         auto result = try_init();
-        if (result.failed) {
-                return Result::err(result.err);
+        if (result.failed()) {
+                return Result::err(result.error());
         }
 
         auto store = NVSStore(ns);
         result = store.try_open();
-        if (result.failed) {
-                return Result::err(result.err);
+        if (result.failed()) {
+                return Result::err(result.error());
         }
 
         return Result::ok(store);
@@ -146,13 +147,13 @@ Result::Result<std::string> NVSStore::get(std::string_view key) {
         size_t len = 0;
         auto result =
             check(nvs_get_str(handle, key_str.c_str(), nullptr, &len));
-        if (result.failed)
-                return Result::err(result.err);
+        if (result.failed())
+                return Result::err(result.error());
 
         std::string str(len, '\0');
         result = check(nvs_get_str(handle, key_str.c_str(), str.data(), &len));
-        if (result.failed)
-                return Result::err(result.err);
+        if (result.failed())
+                return Result::err(result.error());
 
         return Result::ok(str);
 }
