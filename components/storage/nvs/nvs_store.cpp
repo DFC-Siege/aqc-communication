@@ -7,6 +7,12 @@
 
 namespace Storage {
 namespace KV {
+bool NVSStore::has_initialized = false;
+
+void NVSStore::assert_initialized() {
+        assert(has_initialized && "NVSStore has to be initialized before use");
+}
+
 NVSStore::NVSStore(std::string_view ns) : ns(ns) {
 }
 
@@ -34,10 +40,13 @@ Result::Result<bool> NVSStore::try_init(int count) {
                                    "trying to initialize the NVS");
         }
 
+        has_initialized = true;
         return Result::ok();
 }
 
 Result::Result<bool> NVSStore::try_open() {
+        NVSStore::assert_initialized();
+
         auto ret = nvs_open(std::string(ns).c_str(), NVS_READWRITE, &handle);
         switch (ret) {
         case ESP_OK:
@@ -84,6 +93,8 @@ Result::Result<NVSStore> NVSStore::init(std::string_view ns) {
 
 Result::Result<bool> NVSStore::store(std::string_view key,
                                      std::string_view value) {
+        NVSStore::assert_initialized();
+
         auto err = nvs_set_str(handle, std::string(key).c_str(),
                                std::string(value).c_str());
         switch (err) {
@@ -123,6 +134,8 @@ Result::Result<bool> NVSStore::store(std::string_view key,
 }
 
 Result::Result<std::string> NVSStore::get(std::string_view key) {
+        NVSStore::assert_initialized();
+
         const auto key_str = std::string(key);
 
         auto check = [](esp_err_t ret) -> Result::Result<bool> {

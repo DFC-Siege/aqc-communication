@@ -18,6 +18,7 @@ template <typename T> class Result {
         }
 
         const T &value() const {
+                assert(!fail && "called value() on a failed result");
                 return val.value();
         }
 
@@ -42,6 +43,7 @@ template <typename T> class RefResult {
         }
 
         const T &value() const {
+                assert(val != nullptr && "called value() on a failed result");
                 return *val;
         }
 

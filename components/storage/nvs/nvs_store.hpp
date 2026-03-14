@@ -16,11 +16,13 @@ class NVSStore : public IStore {
         Result::Result<std::string> get(std::string_view key) override;
 
       private:
+        static constexpr auto MAX_INIT_TRIES = 3;
+        static bool has_initialized;
         std::string_view ns;
         nvs_handle_t handle;
-        static constexpr auto MAX_INIT_TRIES = 3;
 
         NVSStore(std::string_view ns);
+        static void assert_initialized();
 
         Result::Result<bool> try_open();
         static Result::Result<bool> try_init(int count = 0);
