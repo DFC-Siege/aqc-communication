@@ -1,9 +1,13 @@
 #include <cstdio>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
+#include <memory>
 #include <nvs_flash.h>
 
 #include "ble/ble_manager.hpp"
+#include "logging/i_logger.hpp"
+#include "logging/logger.hpp"
+#include "logging/serial_logger.hpp"
 #include "serial/serial_manager.hpp"
 
 extern "C" {
@@ -14,6 +18,9 @@ void app_main(void) {
                 nvs_flash_erase();
                 nvs_flash_init();
         }
+
+        Logging::Logger::instance().set_logger(
+            std::make_unique<Logging::SerialLogger>(Logging::LogLevel::Info));
 
         auto &ble = BLE::BLEManager::instance();
         ble.on_connection_changed([](bool connected) {
