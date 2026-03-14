@@ -56,7 +56,7 @@ void app_main(void) {
         if (send_result.failed()) {
                 Logging::logger().println_fmt(
                     Logging::LogLevel::Error,
-                    "result: error sending command: {}", send_result.value());
+                    "result: error sending command: {}", send_result.error());
         }
 
         uint32_t counter = 0;

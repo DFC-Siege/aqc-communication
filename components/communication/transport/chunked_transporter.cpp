@@ -1,5 +1,3 @@
-#pragma once
-
 #include <cstdint>
 
 #include "chunked_transporter.hpp"
