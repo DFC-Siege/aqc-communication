@@ -1,4 +1,4 @@
-idf_component_register(SRCS  
+idf_component_register(SRCS
         "i_logger.cpp"
         "logger.cpp"
         "serial_logger.cpp"
