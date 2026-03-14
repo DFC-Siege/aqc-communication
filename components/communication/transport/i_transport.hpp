@@ -35,6 +35,7 @@ struct Ack {
 };
 
 struct Chunk {
+        static constexpr auto HEADER_SIZE = 8;
         std::vector<uint8_t> payload;
         uint16_t index;
         uint16_t total_chunks;
@@ -61,8 +62,10 @@ struct Chunk {
         }
 
         static Result::Result<Chunk> from_buf(std::span<const uint8_t> buf) {
-                if (buf.size() < 8)
+                if (buf.size() < HEADER_SIZE) {
                         return Result::err("buffer too small");
+                }
+
                 auto pull16 = [&](size_t offset) -> uint16_t {
                         return static_cast<uint16_t>(buf[offset] |
                                                      (buf[offset + 1] << 8));
@@ -74,7 +77,7 @@ struct Chunk {
                 chunk.session_id = buf[6];
                 chunk.command = buf[7];
                 chunk.payload =
-                    std::vector<uint8_t>(buf.begin() + 8, buf.end());
+                    std::vector<uint8_t>(buf.begin() + HEADER_SIZE, buf.end());
                 return Result::ok(std::move(chunk));
         }
 };
@@ -83,11 +86,15 @@ class ISender {
       public:
         virtual ~ISender() = default;
 
-        virtual Result::Result<bool> send(uint8_t command,
+        virtual Result::Result<bool> send(uint8_t session_id, uint8_t command,
                                           std::span<const uint8_t> data,
                                           SendCallback send_chunk,
                                           ReceiveCallback on_ack) = 0;
         virtual Result::Result<bool> receive(std::span<const uint8_t> data) = 0;
+
+      protected:
+        uint8_t session_id;
+        uint8_t command;
 };
 
 class IReceiver {

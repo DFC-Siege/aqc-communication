@@ -1,19 +1,23 @@
 #include <cstdint>
+#include <esp_crc.h>
 
 #include "chunked_sender.hpp"
 #include "result.hpp"
 #include "transport/i_transport.hpp"
 
 namespace Transport {
-ChunkedSender::ChunkedSender(uint16_t mtu) : mtu(mtu) {
+ChunkedSender::ChunkedSender(uint16_t mtu, uint8_t max_attempts)
+    : mtu(mtu), max_attempts(max_attempts) {
 }
 
-Result::Result<bool> ChunkedSender::send(uint8_t command,
+Result::Result<bool> ChunkedSender::send(uint8_t session_id, uint8_t command,
                                          std::span<const uint8_t> data,
                                          SendCallback sender,
                                          ReceiveCallback receiver) {
+        this->session_id = session_id;
+        this->command = command;
         this->sender = sender;
-        const auto result = create_chunks(command, data);
+        const auto result = create_chunks(data);
         if (result.failed()) {
                 return Result::err(result.error());
         }
@@ -54,9 +58,30 @@ Result::Result<bool> ChunkedSender::receive(std::span<const uint8_t> data) {
 }
 
 Result::Result<std::vector<Chunk>>
-ChunkedSender::create_chunks(uint8_t command,
-                             std::span<const uint8_t> data) const {
-        return Result::ok(std::vector<Chunk>{});
+ChunkedSender::create_chunks(std::span<const uint8_t> data) const {
+        const auto payload_size = mtu - Chunk::HEADER_SIZE;
+        if (payload_size <= 0) {
+                return Result::err("mtu too small");
+        }
+
+        const auto total_chunks = static_cast<uint16_t>(
+            (data.size() + payload_size - 1) / payload_size);
+
+        std::vector<Chunk> chunks;
+        chunks.reserve(total_chunks);
+        for (uint16_t i = 0; i < total_chunks; i++) {
+                const auto offset = i * payload_size;
+                const auto size =
+                    std::min<size_t>(payload_size, data.size() - offset);
+                auto payload = std::vector<uint8_t>(
+                    data.begin() + offset, data.begin() + offset + size);
+                const auto checksum =
+                    esp_crc16_le(0, payload.data(), payload.size());
+                chunks.emplace_back(std::move(payload), i, total_chunks,
+                                    checksum, session_id, command);
+        }
+
+        return Result::ok(std::move(chunks));
 }
 
 Result::Result<Chunk> ChunkedSender::get_next() {
@@ -64,12 +89,17 @@ Result::Result<Chunk> ChunkedSender::get_next() {
                 return Result::err("index out of bounds getting next");
         }
 
+        current_attempt = 0;
         return Result::ok(chunked_data.at(current_index));
 }
 
-Result::Result<Chunk> ChunkedSender::repeat() const {
+Result::Result<Chunk> ChunkedSender::repeat() {
         if (current_index >= chunked_data.size()) {
                 return Result::err("index out of bound repeating");
+        }
+
+        if (++current_attempt >= max_attempts) {
+                return Result::err("max attempts reached");
         }
 
         return Result::ok(chunked_data.at(current_index));
