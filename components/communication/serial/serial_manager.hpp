@@ -5,26 +5,23 @@
 #include <string>
 #include <vector>
 
-namespace Communication {
-struct Listener {
-        uint32_t id;
-        std::function<void(std::string)> function;
-};
+#include "i_serial_transport.hpp"
 
-class SerialManager {
+namespace Serial {
+class SerialManager : public ISerialTransport {
       public:
         SerialManager();
-        void send(std::string value);
-        uint32_t add_listener(std::function<void(std::string)> function);
-        void remove_listener(uint32_t id);
-        void update();
+        void send(std::span<const uint8_t> data) override;
+        void on_receive(ReceiveCallback cb) override {
+                receive_callback = std::move(cb);
+        }
+        void loop();
 
       private:
         static constexpr auto BAUDRATE = 115200;
         static constexpr auto TX_PIN = 7;
         static constexpr auto RX_PIN = 6;
         static constexpr auto BUF_SIZE = 1024;
-        std::vector<Listener> listeners;
-        uint32_t last_id = 0;
+        ReceiveCallback receive_callback;
 };
-} // namespace Communication
+} // namespace Serial

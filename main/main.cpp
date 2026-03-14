@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <cstdio>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
@@ -32,11 +33,14 @@ void app_main(void) {
                     std::string(reinterpret_cast<const char *>(data.data()),
                                 data.size()));
         });
-        ble.begin("esp32");
+        static constexpr auto BLE_NAME = "aqc";
+        ble.begin(BLE_NAME);
 
-        Communication::SerialManager serial_manager;
-        serial_manager.add_listener([](std::string value) {
-                Logging::logger().print_fmt("recieved: {}", value);
+        Serial::SerialManager serial_manager;
+        serial_manager.on_receive([](std::span<const uint8_t> data) {
+                std::string str(reinterpret_cast<const char *>(data.data()),
+                                data.size());
+                Logging::logger().println("serial", str);
         });
 
         uint32_t counter = 0;
@@ -44,7 +48,7 @@ void app_main(void) {
         const TickType_t interval = pdMS_TO_TICKS(1000);
 
         while (true) {
-                serial_manager.update();
+                serial_manager.loop();
 
                 TickType_t current_time = xTaskGetTickCount();
                 if (current_time - last_wake_time >= interval) {
@@ -52,7 +56,9 @@ void app_main(void) {
                         const auto str =
                             "Count: " + std::to_string(counter++) + "\n";
                         Logging::logger().print_fmt("sending: {}", str);
-                        serial_manager.send(str);
+                        serial_manager.send(std::span<const uint8_t>(
+                            reinterpret_cast<const uint8_t *>(str.data()),
+                            str.size()));
 
                         if (ble.is_connected()) {
                                 auto bytes = std::span<const uint8_t>(

@@ -4,7 +4,7 @@
 
 #include "serial_manager.hpp"
 
-namespace Communication {
+namespace Serial {
 SerialManager::SerialManager() {
         uart_config_t uart_config = {.baud_rate = BAUDRATE,
                                      .data_bits = UART_DATA_8_BITS,
@@ -22,32 +22,19 @@ SerialManager::SerialManager() {
                      UART_PIN_NO_CHANGE);
 }
 
-void SerialManager::send(std::string value) {
-        uart_write_bytes(UART_NUM_1, value.data(), value.size());
+void SerialManager::send(std::span<const uint8_t> data) {
+        uart_write_bytes(UART_NUM_1, data.data(), data.size());
 }
 
-uint32_t
-SerialManager::add_listener(std::function<void(std::string)> function) {
-        listeners.emplace_back(Listener{++last_id, function});
-        return last_id;
-}
+void SerialManager::loop() {
+        std::vector<uint8_t> data(BUF_SIZE);
+        int length = uart_read_bytes(UART_NUM_1, data.data(), BUF_SIZE, 0);
+        if (length <= 0)
+                return;
+        data.resize(length);
 
-void SerialManager::remove_listener(uint32_t id) {
-        auto it =
-            std::remove_if(listeners.begin(), listeners.end(),
-                           [id](const Listener &l) { return l.id == id; });
-        listeners.erase(it, listeners.end());
-}
-
-void SerialManager::update() {
-        uint8_t data[BUF_SIZE];
-        int length = uart_read_bytes(UART_NUM_1, data, BUF_SIZE, 0);
-        if (length > 0) {
-                std::string received_str(reinterpret_cast<char *>(data),
-                                         length);
-                for (const auto &listener : listeners) {
-                        listener.function(received_str);
-                }
+        if (receive_callback) {
+                receive_callback(data);
         }
 }
-} // namespace Communication
+} // namespace Serial
