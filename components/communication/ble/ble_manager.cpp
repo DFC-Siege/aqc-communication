@@ -77,14 +77,19 @@ void BLEManager::startAdvertising() {
         fields.tx_pwr_lvl_is_present = 1;
         fields.tx_pwr_lvl = BLE_HS_ADV_TX_PWR_LVL_AUTO;
 
+        const char *name = ble_svc_gap_device_name();
+        fields.name = reinterpret_cast<const uint8_t *>(name);
+        fields.name_len = strlen(name);
+        fields.name_is_complete = 1;
+
         ble_gap_adv_set_fields(&fields);
 
-        ble_gap_adv_params advParams = {};
-        advParams.conn_mode = BLE_GAP_CONN_MODE_UND;
-        advParams.disc_mode = BLE_GAP_DISC_MODE_GEN;
+        ble_gap_adv_params adv_params = {};
+        adv_params.conn_mode = BLE_GAP_CONN_MODE_UND;
+        adv_params.disc_mode = BLE_GAP_DISC_MODE_GEN;
 
         ble_gap_adv_start(BLE_OWN_ADDR_PUBLIC, nullptr, BLE_HS_FOREVER,
-                          &advParams, onGapEvent, nullptr);
+                          &adv_params, onGapEvent, nullptr);
 }
 
 int BLEManager::onGapEvent(ble_gap_event *event, void *) {
