@@ -122,7 +122,7 @@ int BLEManager::on_gap_event(ble_gap_event *event, void *) {
 }
 
 int BLEManager::on_gatt_access(uint16_t, uint16_t, ble_gatt_access_ctxt *ctxt,
-                             void *) {
+                               void *) {
         auto &self = instance();
 
         if (ctxt->op == BLE_GATT_ACCESS_OP_WRITE_CHR) {
