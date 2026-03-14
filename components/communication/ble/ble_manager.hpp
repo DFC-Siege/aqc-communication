@@ -20,7 +20,7 @@ class BLEManager : public IBLETransport {
 
         void begin(std::string_view device_name);
 
-        void send(std::span<const uint8_t> data) override;
+        Result::Result<bool> send(std::span<const uint8_t> data) override;
         void on_receive(ReceiveCallback cb) override {
                 receive_callback = std::move(cb);
         }

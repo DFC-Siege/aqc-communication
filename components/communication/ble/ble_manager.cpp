@@ -5,6 +5,7 @@
 #include "host/ble_hs.h"
 #include "nimble/nimble_port.h"
 #include "nimble/nimble_port_freertos.h"
+#include "result.hpp"
 #include "services/gap/ble_svc_gap.h"
 #include "services/gatt/ble_svc_gatt.h"
 
@@ -60,15 +61,23 @@ void BLEManager::begin(std::string_view device_name) {
         });
 }
 
-void BLEManager::send(std::span<const uint8_t> data) {
-        if (!is_connected())
-                return;
+Result::Result<bool> BLEManager::send(std::span<const uint8_t> data) {
+        if (!is_connected()) {
+                return Result::err("ble not connected");
+        }
 
         os_mbuf *om = ble_hs_mbuf_from_flat(data.data(), data.size());
-        if (!om)
-                return;
+        if (!om) {
+                return Result::err("error creating buffer");
+        }
 
-        ble_gatts_notify_custom(conn_handle, tx_attr_handle, om);
+        const auto result =
+            ble_gatts_notify_custom(conn_handle, tx_attr_handle, om);
+        if (result != 0) {
+                return Result::err("error sending data");
+        }
+
+        return Result::ok();
 }
 
 void BLEManager::start_advertising() {
@@ -129,8 +138,9 @@ int BLEManager::on_gatt_access(uint16_t, uint16_t, ble_gatt_access_ctxt *ctxt,
                 uint16_t len = OS_MBUF_PKTLEN(ctxt->om);
                 std::vector<uint8_t> buf(len);
                 ble_hs_mbuf_to_flat(ctxt->om, buf.data(), len, nullptr);
-                if (self.receive_callback)
+                if (self.receive_callback) {
                         self.receive_callback(buf);
+                }
         }
 
         return 0;
