@@ -105,7 +105,7 @@ struct Chunk {
 
 class ISender {
       public:
-        using CompleteCallback = std::function<void(uint8_t command)>;
+        using CompleteCallback = std::function<void()>;
 
         virtual ~ISender() = default;
         virtual Result::Result<bool> send(uint8_t session_id, uint8_t command,

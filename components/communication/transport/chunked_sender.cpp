@@ -59,7 +59,7 @@ Result::Result<bool> ChunkedSender::receive(std::span<const uint8_t> data) {
         }
 
         if (current_index == chunked_data.size() - 1) {
-                on_complete(command);
+                on_complete();
                 return Result::ok();
         }
 

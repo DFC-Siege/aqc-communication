@@ -7,6 +7,7 @@
 
 #include "ble/ble_manager.hpp"
 #include "communication_handler.hpp"
+#include "i_logger.hpp"
 #include "logger.hpp"
 #include "nvs/nvs_store.hpp"
 #include "serial/serial_manager.hpp"
@@ -40,6 +41,23 @@ void app_main(void) {
 
         Communication::CommunicationHandler communication_handler(
             ble, serial_manager);
+
+        const std::string str = "yee";
+        const auto send_result = communication_handler.ble_transporter.send(
+            0x01,
+            std::span<const uint8_t>(
+                reinterpret_cast<const uint8_t *>(str.data()), str.size()),
+            []() { Logging::logger().println("Success!!!!!"); },
+            [](std::string_view error) {
+                    Logging::logger().println_fmt(
+                        Logging::LogLevel::Error,
+                        "on_error: error sending command: {}", error);
+            });
+        if (send_result.failed()) {
+                Logging::logger().println_fmt(
+                    Logging::LogLevel::Error,
+                    "result: error sending command: {}", send_result.value());
+        }
 
         uint32_t counter = 0;
         TickType_t last_wake_time = xTaskGetTickCount();

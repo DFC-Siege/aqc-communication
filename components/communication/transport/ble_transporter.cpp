@@ -42,9 +42,9 @@ BLETransporter::send(uint8_t command, std::span<const uint8_t> data,
             [this](std::span<const uint8_t> data) -> Result::Result<bool> {
                     return this->ble_transport.send(data);
             },
-            [on_complete, session, this](uint8_t command) {
+            [on_complete, session, this]() {
                     remove_sender(session);
-                    on_complete(command);
+                    on_complete();
             });
         if (result.failed()) {
                 return result;
