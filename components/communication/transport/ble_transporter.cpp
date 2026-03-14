@@ -5,10 +5,9 @@
 #include "transport/chunked_sender.hpp"
 
 namespace Transport {
-BLETransporter::BLETransporter(
-    uint16_t mtu, std::unique_ptr<BLE::IBLETransport> ble_transport)
-    : ble_transport(std::move(ble_transport)), mtu(mtu) {
-        ble_transport->on_receive([this](std::span<const uint8_t> data) {
+BLETransporter::BLETransporter(uint16_t mtu, BLE::IBLETransport &ble_transport)
+    : ble_transport(ble_transport), mtu(mtu) {
+        ble_transport.on_receive([this](std::span<const uint8_t> data) {
                 const auto result = feed(data);
                 if (result.failed()) {
                         Logging::logger().println(Logging::LogLevel::Error, TAG,
@@ -41,7 +40,7 @@ BLETransporter::send(uint8_t command, std::span<const uint8_t> data,
         const auto result = sender->send(
             session, command, data,
             [this](std::span<const uint8_t> data) -> Result::Result<bool> {
-                    return this->ble_transport->send(data);
+                    return this->ble_transport.send(data);
             },
             [on_complete, session, this](uint8_t command) {
                     remove_sender(session);

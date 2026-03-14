@@ -9,12 +9,13 @@
 namespace Communication {
 class CommunicationHandler {
       public:
-        CommunicationHandler(
-            std::unique_ptr<BLE::IBLETransport> ble_transport,
-            std::unique_ptr<Serial::ISerialTransport> serial_transport);
+        Transport::BLETransporter ble_transporter;
+        Serial::ISerialTransport &serial_transport;
+
+        CommunicationHandler(BLE::IBLETransport &ble_transport,
+                             Serial::ISerialTransport &serial_transport);
 
       private:
-        Transport::BLETransporter ble_transporter;
-        std::unique_ptr<Serial::ISerialTransport> serial_transport;
+        static constexpr auto BLE_MTU = 517;
 };
 } // namespace Communication

@@ -5,9 +5,9 @@
 
 namespace Communication {
 CommunicationHandler::CommunicationHandler(
-    std::unique_ptr<BLE::IBLETransport> ble_transport,
-    std::unique_ptr<Serial::ISerialTransport> serial_transport)
-    : ble_transporter(Transport::BLETransporter{std::move(ble_transport)}),
-      serial_transport(std::move(serial_transport)) {
+    BLE::IBLETransport &ble_transport,
+    Serial::ISerialTransport &serial_transport)
+    : ble_transporter(Transport::BLETransporter{BLE_MTU, ble_transport}),
+      serial_transport(serial_transport) {
 }
 } // namespace Communication

@@ -6,6 +6,7 @@
 #include <nvs_flash.h>
 
 #include "ble/ble_manager.hpp"
+#include "communication_handler.hpp"
 #include "logger.hpp"
 #include "nvs/nvs_store.hpp"
 #include "serial/serial_manager.hpp"
@@ -27,12 +28,6 @@ void app_main(void) {
                 Logging::logger().print_fmt(
                     "BLE {}", connected ? "connected" : "disconnected");
         });
-        ble.on_receive([](std::span<const uint8_t> data) {
-                Logging::logger().print_fmt(
-                    "BLE received: {}",
-                    std::string(reinterpret_cast<const char *>(data.data()),
-                                data.size()));
-        });
         static constexpr auto BLE_NAME = "aqc";
         ble.begin(BLE_NAME);
 
@@ -42,6 +37,9 @@ void app_main(void) {
                                 data.size());
                 Logging::logger().println("serial", str);
         });
+
+        Communication::CommunicationHandler communication_handler(
+            ble, serial_manager);
 
         uint32_t counter = 0;
         TickType_t last_wake_time = xTaskGetTickCount();
