@@ -114,10 +114,6 @@ class ISender {
                                           CompleteCallback on_complete) = 0;
         virtual Result::Result<bool> receive(std::span<const uint8_t> data) = 0;
 
-        uint8_t get_session_id() const {
-                return session_id;
-        }
-
       protected:
         uint8_t session_id;
         uint8_t command;
@@ -136,10 +132,6 @@ class IReceiver {
                                            SendCallback sender,
                                            CompleteCallback on_complete) = 0;
         virtual Result::Result<bool> receive(std::span<const uint8_t> data) = 0;
-
-        uint8_t get_session_id() const {
-                return session_id;
-        }
 
       protected:
         uint8_t session_id;
