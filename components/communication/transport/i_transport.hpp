@@ -146,14 +146,20 @@ class ITransporter {
         using ErrorCallback = std::function<void(std::string_view error)>;
 
         virtual ~ITransporter() = default;
+
         virtual Result::Result<bool> send(uint8_t command,
                                           std::span<const uint8_t> data,
                                           ISender::CompleteCallback on_complete,
                                           ErrorCallback on_error) = 0;
+
+        virtual Result::Result<std::span<const uint8_t>>
+        send(uint8_t command, std::span<const uint8_t> data) = 0;
+
         virtual Result::Result<bool>
         request(uint8_t command, std::span<const uint8_t> payload,
                 IReceiver::CompleteCallback on_complete,
                 ErrorCallback on_error) = 0;
+
         virtual Result::Result<FeedResult>
         feed(std::span<const uint8_t> raw) = 0;
 

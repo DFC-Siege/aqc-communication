@@ -59,7 +59,7 @@ Result::Result<bool> ChunkedReceiver::receive(std::span<const uint8_t> data) {
         received_chunks.push_back(chunk);
 
         if (chunk.index == chunk.total_chunks - 1) {
-                on_complete(command, reconstruct_data(received_chunks));
+                on_complete(reconstruct_data(received_chunks));
                 received_chunks.clear();
         }
 

@@ -1,9 +1,10 @@
 #include <cstdint>
 
 #include "chunked_transporter.hpp"
+#include "transport/chunked_sender.hpp"
 
 namespace Transport {
-ChunkedTransporter::ChunkedTransporter() {
+ChunkedTransporter::ChunkedTransporter(uint16_t mtu) : mtu(mtu) {
         for (uint8_t i = 0; i < 255; i++) {
                 available_sender_sessions.insert(i);
                 available_receiver_sessions.insert(i);
@@ -39,6 +40,35 @@ ChunkedTransporter::feed(std::span<const uint8_t> data) {
         default:
                 return Result::err("unknown packet type");
         }
+}
+
+Result::Result<bool>
+ChunkedTransporter::send(uint8_t command, std::span<const uint8_t> data,
+                         ISender::CompleteCallback on_complete,
+                         ITransporter::ErrorCallback on_error) {
+        const auto session_result = next_sender_session();
+        if (session_result.failed()) {
+                return Result::err(session_result.error());
+        }
+        const auto session = session_result.value();
+
+        error_callbacks[session] = on_error;
+        senders[session] = std::make_unique<ChunkedSender>(mtu, session);
+        const auto &sender = senders[session];
+        const auto result = sender->send(
+            session, command, data,
+            [this](std::span<const uint8_t> data) -> Result::Result<bool> {
+                    return this->concrete_send(data);
+            },
+            [on_complete, session, this]() {
+                    remove_sender(session);
+                    on_complete();
+            });
+        if (result.failed()) {
+                return result;
+        }
+
+        return Result::ok();
 }
 
 Result::Result<uint8_t> ChunkedTransporter::next_receiver_session() {

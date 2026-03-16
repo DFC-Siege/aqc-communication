@@ -2,11 +2,13 @@
 
 #include "ble_transporter.hpp"
 #include "logger.hpp"
+#include "result.hpp"
 #include "transport/chunked_sender.hpp"
+#include "transport/chunked_transporter.hpp"
 
 namespace Transport {
 BLETransporter::BLETransporter(uint16_t mtu, BLE::IBLETransport &ble_transport)
-    : ble_transport(ble_transport), mtu(mtu) {
+    : ChunkedTransporter(mtu), ble_transport(ble_transport) {
         ble_transport.on_receive([this](std::span<const uint8_t> data) {
                 const auto result = feed(data);
                 if (result.failed()) {
@@ -25,38 +27,14 @@ BLETransporter::BLETransporter(uint16_t mtu, BLE::IBLETransport &ble_transport)
 }
 
 Result::Result<bool>
-BLETransporter::send(uint8_t command, std::span<const uint8_t> data,
-                     ISender::CompleteCallback on_complete,
-                     ITransporter::ErrorCallback on_error) {
-        const auto session_result = next_sender_session();
-        if (session_result.failed()) {
-                return Result::err(session_result.error());
-        }
-        const auto session = session_result.value();
-
-        error_callbacks[session] = on_error;
-        senders[session] = std::make_unique<ChunkedSender>(mtu, session);
-        const auto &sender = senders[session];
-        const auto result = sender->send(
-            session, command, data,
-            [this](std::span<const uint8_t> data) -> Result::Result<bool> {
-                    return this->ble_transport.send(data);
-            },
-            [on_complete, session, this]() {
-                    remove_sender(session);
-                    on_complete();
-            });
-        if (result.failed()) {
-                return result;
-        }
-
-        return Result::ok();
+BLETransporter::concrete_send(std::span<const uint8_t> data) {
+        return this->ble_transport.send(data);
 }
 
 Result::Result<bool>
 BLETransporter::request(uint8_t command, std::span<const uint8_t> payload,
                         IReceiver::CompleteCallback on_complete,
                         ITransporter::ErrorCallback on_error) {
-        return Result::ok();
+        return Result::err("not implemented");
 }
 } // namespace Transport
