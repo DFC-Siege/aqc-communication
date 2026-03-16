@@ -2,9 +2,9 @@
 
 #include <memory>
 
-#include "ble/i_ble_transport.hpp"
-#include "serial/i_serial_transport.hpp"
-#include "transport/ble/ble_transporter.hpp"
+#include "ble_transporter.hpp"
+#include "i_ble_transport.hpp"
+#include "i_serial_transport.hpp"
 
 namespace Communication {
 class CommunicationHandler {

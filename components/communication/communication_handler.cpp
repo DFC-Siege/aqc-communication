@@ -1,7 +1,7 @@
 #include <memory>
 
+#include "ble_transporter.hpp"
 #include "communication_handler.hpp"
-#include "transport/ble/ble_transporter.hpp"
 
 namespace Communication {
 CommunicationHandler::CommunicationHandler(

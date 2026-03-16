@@ -7,11 +7,11 @@
 #include <nvs_flash.h>
 #include <string_view>
 
-#include "ble/ble_manager.hpp"
+#include "ble_hal.hpp"
 #include "communication_handler.hpp"
 #include "logger.hpp"
 #include "result.hpp"
-#include "serial/serial_manager.hpp"
+#include "serial_hal.hpp"
 #include "serial_logger.hpp"
 
 extern "C" {
@@ -32,16 +32,16 @@ void app_main(void) {
         });
         ble.begin("aqc");
 
-        Serial::SerialManager serial_manager;
-        serial_manager.on_receive([](std::span<const uint8_t> data) {
+        Serial::SerialManager serial_hal;
+        serial_hal.on_receive([](std::span<const uint8_t> data) {
                 Logging::logger().println(
                     "serial", std::string_view(
                                   reinterpret_cast<const char *>(data.data()),
                                   data.size()));
         });
 
-        Communication::CommunicationHandler communication_handler(
-            ble, serial_manager);
+        Communication::CommunicationHandler communication_handler(ble,
+                                                                  serial_hal);
 
         uint32_t counter = 0;
         TickType_t last_wake_time = xTaskGetTickCount();
@@ -76,7 +76,7 @@ void app_main(void) {
         }
 
         while (true) {
-                serial_manager.loop();
+                serial_hal.loop();
 
                 TickType_t current_time = xTaskGetTickCount();
                 if (current_time - last_wake_time >= interval) {
