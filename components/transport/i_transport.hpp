@@ -161,7 +161,8 @@ class ITransporter {
                 IReceiver::CompleteCallback on_complete,
                 ErrorCallback on_error) = 0;
 
-        virtual std::shared_ptr<Future<Result::Result<bool>>>
+        virtual std::shared_ptr<
+            Future<Result::Result<std::span<const uint8_t>>>>
         request_async(uint8_t command, std::span<const uint8_t> payload) = 0;
 
         virtual Result::Result<FeedResult>

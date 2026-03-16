@@ -27,7 +27,7 @@ class ChunkedTransporter : public ITransporter {
                                      IReceiver::CompleteCallback on_complete,
                                      ErrorCallback on_error) override;
 
-        std::shared_ptr<Future<Result::Result<bool>>>
+        std::shared_ptr<Future<Result::Result<std::span<const uint8_t>>>>
         request_async(uint8_t command,
                       std::span<const uint8_t> payload) override;
 

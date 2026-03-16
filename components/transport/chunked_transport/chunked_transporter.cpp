@@ -1,4 +1,5 @@
 #include <cstdint>
+#include <span>
 
 #include "chunked_sender.hpp"
 #include "chunked_transporter.hpp"
@@ -80,6 +81,32 @@ ChunkedTransporter::send_async(uint8_t command, std::span<const uint8_t> data) {
 
         send(
             command, data, [&]() { promise->set_value(Result::ok()); },
+            [&](std::string_view err) {
+                    promise->set_value(Result::err(err));
+            });
+
+        return future;
+}
+
+Result::Result<bool>
+ChunkedTransporter::request(uint8_t command, std::span<const uint8_t> payload,
+                            IReceiver::CompleteCallback on_complete,
+                            ErrorCallback on_error) {
+        return Result::err("not implemented");
+}
+
+std::shared_ptr<Future<Result::Result<std::span<const uint8_t>>>>
+ChunkedTransporter::request_async(uint8_t command,
+                                  std::span<const uint8_t> payload) {
+        auto promise = std::make_shared<
+            Promise<Result::Result<std::span<const uint8_t>>>>();
+        auto future = promise->get_future();
+
+        request(
+            command, payload,
+            [&](std::span<const uint8_t> data) {
+                    promise->set_value(Result::ok(data));
+            },
             [&](std::string_view err) {
                     promise->set_value(Result::err(err));
             });
