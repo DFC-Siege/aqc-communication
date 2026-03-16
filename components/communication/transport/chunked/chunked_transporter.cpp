@@ -1,9 +1,9 @@
 #include <cstdint>
 
-#include "chunked_transporter.hpp"
 #include "future.hpp"
 #include "result.hpp"
-#include "transport/chunked_sender.hpp"
+#include "transport/chunked/chunked_sender.hpp"
+#include "transport/chunked/chunked_transporter.hpp"
 
 namespace Transport {
 ChunkedTransporter::ChunkedTransporter(uint16_t mtu) : mtu(mtu) {

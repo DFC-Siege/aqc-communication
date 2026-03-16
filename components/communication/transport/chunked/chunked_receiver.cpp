@@ -2,8 +2,8 @@
 #include <esp_crc.h>
 #include <vector>
 
-#include "chunked_receiver.hpp"
 #include "result.hpp"
+#include "transport/chunked/chunked_receiver.hpp"
 #include "transport/i_transport.hpp"
 
 namespace Transport {

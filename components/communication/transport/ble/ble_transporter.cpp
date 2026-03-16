@@ -1,10 +1,10 @@
 #include <cstdint>
 
-#include "ble_transporter.hpp"
 #include "logger.hpp"
 #include "result.hpp"
-#include "transport/chunked_sender.hpp"
-#include "transport/chunked_transporter.hpp"
+#include "transport/ble/ble_transporter.hpp"
+#include "transport/chunked/chunked_sender.hpp"
+#include "transport/chunked/chunked_transporter.hpp"
 
 namespace Transport {
 BLETransporter::BLETransporter(uint16_t mtu, BLE::IBLETransport &ble_transport)

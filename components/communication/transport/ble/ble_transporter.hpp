@@ -3,10 +3,10 @@
 #include <cstdint>
 #include <memory>
 
-#include "../chunked_transporter.hpp"
-#include "../i_transport.hpp"
 #include "ble/i_ble_transport.hpp"
 #include "result.hpp"
+#include "transport/chunked/chunked_transporter.hpp"
+#include "transport/i_transport.hpp"
 
 namespace Transport {
 class BLETransporter : public ChunkedTransporter {
