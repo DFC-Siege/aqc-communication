@@ -3,13 +3,13 @@
 #include <cstdint>
 #include <memory>
 
+#include "../chunked_transporter.hpp"
+#include "../i_transport.hpp"
 #include "ble/i_ble_transport.hpp"
-#include "chunked_transporter.hpp"
-#include "i_transport.hpp"
 #include "result.hpp"
 
 namespace Transport {
-class BLETransporter : ChunkedTransporter {
+class BLETransporter : public ChunkedTransporter {
       public:
         BLETransporter(uint16_t mtu, BLE::IBLETransport &ble_transport);
 

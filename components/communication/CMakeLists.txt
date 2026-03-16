@@ -4,8 +4,7 @@ idf_component_register(SRCS
         "ble/ble_manager.cpp"
         "transport/chunked_sender.cpp"
         "transport/chunked_receiver.cpp"
-        "transport/ble_transporter.cpp"
+        "transport/ble/ble_transporter.cpp"
         "transport/chunked_transporter.cpp"
-        "transport/ble_transporter.cpp"
         INCLUDE_DIRS "."
         REQUIRES esp_wifi nvs_flash esp_driver_uart bt esp_rom result logging)

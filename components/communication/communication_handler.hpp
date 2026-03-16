@@ -4,7 +4,7 @@
 
 #include "ble/i_ble_transport.hpp"
 #include "serial/i_serial_transport.hpp"
-#include "transport/ble_transporter.hpp"
+#include "transport/ble/ble_transporter.hpp"
 
 namespace Communication {
 class CommunicationHandler {
