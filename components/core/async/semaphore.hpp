@@ -45,12 +45,16 @@ class Semaphore {
         }
         bool take(uint32_t timeout_ms) {
                 std::unique_lock lock(mutex);
-                return cv.wait_for(lock, std::chrono::milliseconds(timeout_ms),
-                                   [this] { return ready; });
+                const auto result =
+                    cv.wait_for(lock, std::chrono::milliseconds(timeout_ms),
+                                [this] { return ready; });
+                ready = false;
+                return result;
         }
         bool take() {
                 std::unique_lock lock(mutex);
                 cv.wait(lock, [this] { return ready; });
+                ready = false;
                 return true;
         }
 };
