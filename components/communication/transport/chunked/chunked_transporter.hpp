@@ -22,6 +22,15 @@ class ChunkedTransporter : public ITransporter {
         std::shared_ptr<Future<Result::Result<bool>>>
         send_async(uint8_t command, std::span<const uint8_t> data) override;
 
+        Result::Result<bool> request(uint8_t command,
+                                     std::span<const uint8_t> payload,
+                                     IReceiver::CompleteCallback on_complete,
+                                     ErrorCallback on_error) override;
+
+        std::shared_ptr<Future<Result::Result<bool>>>
+        request_async(uint8_t command,
+                      std::span<const uint8_t> payload) override;
+
       protected:
         std::unordered_map<uint8_t, ErrorCallback> error_callbacks;
         uint16_t mtu;
