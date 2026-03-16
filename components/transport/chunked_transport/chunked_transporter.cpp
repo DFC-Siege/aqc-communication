@@ -4,7 +4,6 @@
 #include "chunked_receiver.hpp"
 #include "chunked_sender.hpp"
 #include "chunked_transporter.hpp"
-#include "future.hpp"
 #include "result.hpp"
 
 namespace Transport {
@@ -81,8 +80,8 @@ ChunkedTransporter::send_async(uint8_t command, std::span<const uint8_t> data) {
         auto future = promise->get_future();
 
         send(
-            command, data, [&]() { promise->set_value(Result::ok()); },
-            [&](std::string_view err) {
+            command, data, [promise]() { promise->set_value(Result::ok()); },
+            [promise](std::string_view err) {
                     promise->set_value(Result::err(err));
             });
 
@@ -127,10 +126,10 @@ ChunkedTransporter::request_async(uint8_t command,
 
         request(
             command, payload,
-            [&](std::vector<uint8_t> data) {
+            [promise](std::vector<uint8_t> data) {
                     promise->set_value(Result::ok(data));
             },
-            [&](std::string_view err) {
+            [promise](std::string_view err) {
                     promise->set_value(Result::err(err));
             });
 

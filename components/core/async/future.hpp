@@ -1,39 +1,29 @@
 #pragma once
-
-#include <algorithm>
+#include "semaphore.hpp"
 #include <cstdint>
-#include <freertos/FreeRTOS.h>
-#include <freertos/semphr.h>
 #include <memory>
 
 template <typename T> class Future {
-        SemaphoreHandle_t sem;
+        Semaphore sem;
         T value;
-        bool has_value = false;
 
       public:
-        Future() : sem(xSemaphoreCreateBinary()) {
-        }
-        ~Future() {
-                vSemaphoreDelete(sem);
-        }
-
+        Future() = default;
         Future(const Future &) = delete;
         Future &operator=(const Future &) = delete;
 
         void set_value(T val) {
                 value = std::move(val);
-                has_value = true;
-                xSemaphoreGive(sem);
+                sem.give();
         }
 
         T get() {
-                xSemaphoreTake(sem, portMAX_DELAY);
+                sem.take();
                 return std::move(value);
         }
 
         bool wait_for(uint32_t timeout_ms) {
-                return xSemaphoreTake(sem, pdMS_TO_TICKS(timeout_ms)) == pdTRUE;
+                return sem.take(timeout_ms);
         }
 
         bool is_ready() {

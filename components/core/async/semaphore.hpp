@@ -1,0 +1,60 @@
+#pragma once
+
+#ifdef PLATFORM_FREERTOS
+#include <freertos/FreeRTOS.h>
+#include <freertos/semphr.h>
+
+class Semaphore {
+        SemaphoreHandle_t sem;
+
+      public:
+        Semaphore() : sem(xSemaphoreCreateBinary()) {
+        }
+        ~Semaphore() {
+                vSemaphoreDelete(sem);
+        }
+        Semaphore(const Semaphore &) = delete;
+        Semaphore &operator=(const Semaphore &) = delete;
+
+        void give() {
+                xSemaphoreGive(sem);
+        }
+        bool take(uint32_t timeout_ms) {
+                return xSemaphoreTake(sem, pdMS_TO_TICKS(timeout_ms)) == pdTRUE;
+        }
+        bool take() {
+                return xSemaphoreTake(sem, portMAX_DELAY) == pdTRUE;
+        }
+};
+
+#elif defined(PLATFORM_POSIX)
+#include <chrono>
+#include <condition_variable>
+#include <mutex>
+
+class Semaphore {
+        std::mutex mutex;
+        std::condition_variable cv;
+        bool ready = false;
+
+      public:
+        void give() {
+                std::unique_lock lock(mutex);
+                ready = true;
+                cv.notify_one();
+        }
+        bool take(uint32_t timeout_ms) {
+                std::unique_lock lock(mutex);
+                return cv.wait_for(lock, std::chrono::milliseconds(timeout_ms),
+                                   [this] { return ready; });
+        }
+        bool take() {
+                std::unique_lock lock(mutex);
+                cv.wait(lock, [this] { return ready; });
+                return true;
+        }
+};
+
+#else
+#error "No platform selected, define PLATFORM_FREERTOS or PLATFORM_POSIX"
+#endif

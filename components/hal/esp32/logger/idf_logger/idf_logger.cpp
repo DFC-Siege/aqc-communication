@@ -6,7 +6,7 @@
 
 namespace Logging {
 
-void IDFLogger::print(LogLevel level, std::string_view tag,
+void IdfLogger::print(LogLevel level, std::string_view tag,
                       std::string_view value) {
         switch (level) {
         case LogLevel::Verbose:
@@ -33,7 +33,7 @@ void IDFLogger::print(LogLevel level, std::string_view tag,
         }
 }
 
-void IDFLogger::println(LogLevel level, std::string_view tag,
+void IdfLogger::println(LogLevel level, std::string_view tag,
                         std::string_view value) {
         print(level, tag, value);
 }

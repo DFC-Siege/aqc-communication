@@ -17,6 +17,10 @@ set(EXTRA_COMPONENT_DIRS
     components/communication
 )
 
+if(ESP_PLATFORM)
+    add_compile_definitions(PLATFORM_FREERTOS)
+endif()
+
 set(PROJECT_NAME communication)
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
