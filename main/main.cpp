@@ -2,12 +2,15 @@
 #include <cstdio>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
+#include <future>
 #include <memory>
 #include <nvs_flash.h>
+#include <string_view>
 
 #include "ble/ble_manager.hpp"
 #include "communication_handler.hpp"
 #include "logger.hpp"
+#include "result.hpp"
 #include "serial/serial_manager.hpp"
 #include "serial_logger.hpp"
 
@@ -47,15 +50,26 @@ void app_main(void) {
         const auto request_result =
             communication_handler.ble_transporter.request(
                 0x01, std::span<const uint8_t>{},
-                [](std::span<const uint8_t> data) {
+                [](const auto response) {
                         Logging::logger().println("request complete");
                 },
-                [](std::string_view error) {
+                [](const auto error) {
                         Logging::logger().println_fmt(Logging::LogLevel::Error,
                                                       "request error: {}",
                                                       error);
                 });
         if (request_result.failed()) {
+                Logging::logger().println_fmt(Logging::LogLevel::Error,
+                                              "request error: {}",
+                                              request_result.error());
+        }
+
+        const auto command = 0x01;
+        const auto data = std::span<const uint8_t>{};
+        const auto result =
+            communication_handler.ble_transporter.send_async(command, data)
+                ->get();
+        if (result.failed()) {
                 Logging::logger().println_fmt(Logging::LogLevel::Error,
                                               "request error: {}",
                                               request_result.error());

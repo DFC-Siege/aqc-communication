@@ -1,9 +1,11 @@
 #pragma once
 
-#include "i_transport.hpp"
-#include "result.hpp"
 #include <cstdint>
 #include <span>
+
+#include "future.hpp"
+#include "i_transport.hpp"
+#include "result.hpp"
 
 namespace Transport {
 class ChunkedTransporter : public ITransporter {
@@ -16,6 +18,9 @@ class ChunkedTransporter : public ITransporter {
         send(uint8_t command, std::span<const uint8_t> data,
              ISender::CompleteCallback on_complete,
              ITransporter::ErrorCallback on_error) override;
+
+        std::shared_ptr<Future<Result::Result<bool>>>
+        send_async(uint8_t command, std::span<const uint8_t> data) override;
 
       protected:
         std::unordered_map<uint8_t, ErrorCallback> error_callbacks;

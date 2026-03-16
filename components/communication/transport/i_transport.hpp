@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <esp_crc.h>
 #include <functional>
+#include <future>
 #include <memory>
 #include <set>
 #include <span>
@@ -10,6 +11,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "future.hpp"
 #include "result.hpp"
 
 namespace Transport {
@@ -150,6 +152,10 @@ class ITransporter {
                                           std::span<const uint8_t> data,
                                           ISender::CompleteCallback on_complete,
                                           ErrorCallback on_error) = 0;
+
+        virtual std::shared_ptr<Future<Result::Result<bool>>>
+        send_async(uint8_t command, std::span<const uint8_t> data) = 0;
+
         virtual Result::Result<bool>
         request(uint8_t command, std::span<const uint8_t> payload,
                 IReceiver::CompleteCallback on_complete,

@@ -7,4 +7,5 @@ idf_component_register(SRCS
         "transport/ble/ble_transporter.cpp"
         "transport/chunked_transporter.cpp"
         INCLUDE_DIRS "."
-        REQUIRES esp_wifi nvs_flash esp_driver_uart bt esp_rom result logging)
+        REQUIRES esp_wifi nvs_flash esp_driver_uart bt esp_rom result logging
+        async)

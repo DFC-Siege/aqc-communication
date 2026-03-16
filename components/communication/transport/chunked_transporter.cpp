@@ -1,6 +1,8 @@
 #include <cstdint>
 
 #include "chunked_transporter.hpp"
+#include "future.hpp"
+#include "result.hpp"
 #include "transport/chunked_sender.hpp"
 
 namespace Transport {
@@ -69,6 +71,20 @@ ChunkedTransporter::send(uint8_t command, std::span<const uint8_t> data,
         }
 
         return Result::ok();
+}
+
+std::shared_ptr<Future<Result::Result<bool>>>
+ChunkedTransporter::send_async(uint8_t command, std::span<const uint8_t> data) {
+        auto promise = std::make_shared<Promise<Result::Result<bool>>>();
+        auto future = promise->get_future();
+
+        send(
+            command, data, [&]() { promise->set_value(Result::ok()); },
+            [&](std::string_view err) {
+                    promise->set_value(Result::err(err));
+            });
+
+        return future;
 }
 
 Result::Result<uint8_t> ChunkedTransporter::next_receiver_session() {

@@ -1,3 +1,3 @@
 idf_component_register(SRCS "main.cpp"
-                       PRIV_REQUIRES communication logging result storage
+                       PRIV_REQUIRES communication logging result storage async
                        INCLUDE_DIRS ".")
