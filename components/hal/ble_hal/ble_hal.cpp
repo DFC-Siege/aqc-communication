@@ -139,7 +139,7 @@ int BLEManager::on_gatt_access(uint16_t, uint16_t, ble_gatt_access_ctxt *ctxt,
                 std::vector<uint8_t> buf(len);
                 ble_hs_mbuf_to_flat(ctxt->om, buf.data(), len, nullptr);
                 if (self.receive_callback) {
-                        self.receive_callback(buf);
+                        self.receive_callback(std::move(buf));
                 }
         }
 

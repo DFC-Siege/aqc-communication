@@ -118,16 +118,16 @@ ChunkedTransporter::request(uint8_t command, std::span<const uint8_t> payload,
         return Result::ok();
 }
 
-std::shared_ptr<Future<Result::Result<std::span<const uint8_t>>>>
+std::shared_ptr<Future<Result::Result<std::vector<uint8_t>>>>
 ChunkedTransporter::request_async(uint8_t command,
                                   std::span<const uint8_t> payload) {
-        auto promise = std::make_shared<
-            Promise<Result::Result<std::span<const uint8_t>>>>();
+        auto promise =
+            std::make_shared<Promise<Result::Result<std::vector<uint8_t>>>>();
         auto future = promise->get_future();
 
         request(
             command, payload,
-            [&](std::span<const uint8_t> data) {
+            [&](std::vector<uint8_t> data) {
                     promise->set_value(Result::ok(data));
             },
             [&](std::string_view err) {
