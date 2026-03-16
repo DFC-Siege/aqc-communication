@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "i_transport.hpp"
+#include "packet.hpp"
 #include "result.hpp"
 
 namespace Transport {

@@ -4,6 +4,7 @@
 #include "chunked_receiver.hpp"
 #include "chunked_sender.hpp"
 #include "chunked_transporter.hpp"
+#include "packet.hpp"
 #include "result.hpp"
 
 namespace Transport {
