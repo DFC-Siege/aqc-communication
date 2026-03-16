@@ -10,6 +10,7 @@
 #include "ble_hal.hpp"
 #include "communication_handler.hpp"
 #include "logger.hpp"
+#include "nvs_store.hpp"
 #include "result.hpp"
 #include "serial_hal.hpp"
 #include "serial_logger.hpp"
@@ -17,6 +18,9 @@
 extern "C" {
 void app_main(void) {
         Logging::Logger::set(std::make_unique<Logging::SerialLogger>());
+
+        static constexpr auto DEFAULT_NAMESPACE = "default";
+        auto store = Storage::KV::NvsStore::init(DEFAULT_NAMESPACE);
 
         esp_err_t ret = nvs_flash_init();
         if (ret == ESP_ERR_NVS_NO_FREE_PAGES ||

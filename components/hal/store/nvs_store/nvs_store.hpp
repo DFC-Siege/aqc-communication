@@ -11,8 +11,10 @@ namespace KV {
 class NvsStore : public IStore {
       public:
         static Result::Result<NvsStore> init(std::string_view ns);
+
         Result::Result<bool> store(std::string_view key,
                                    std::string_view value) override;
+
         Result::Result<std::string> get(std::string_view key) override;
 
       private:

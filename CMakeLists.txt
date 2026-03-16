@@ -6,10 +6,10 @@ set(EXTRA_COMPONENT_DIRS
     components/core/logger
     components/core/logger/idf_logger
     components/core/logger/serial_logger
-    components/hal/storage/nvs_store
     components/hal/ble_hal
     components/hal/serial_hal
-    components/hal/storage/nvs_store
+    components/hal/store
+    components/hal/store/nvs_store
     components/transport
     components/transport/chunked_transport
     components/transport/chunked_transport/ble_transport
