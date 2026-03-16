@@ -7,11 +7,11 @@
 #include "host/ble_hs.h"
 #include "services/gatt/ble_svc_gatt.h"
 
-#include "i_ble_transport.hpp"
+#include "i_ble_hal.hpp"
 
 namespace Ble {
 
-class BleHal : public IBleTransport {
+class BleHal : public IBleHal {
       public:
         static BleHal &instance() {
                 static BleHal inst;

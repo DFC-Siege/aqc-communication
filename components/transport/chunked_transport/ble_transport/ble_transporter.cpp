@@ -7,9 +7,9 @@
 #include "result.hpp"
 
 namespace Transport {
-BleTransporter::BleTransporter(uint16_t mtu, Ble::IBleTransport &ble_transport)
-    : ChunkedTransporter(mtu), ble_transport(ble_transport) {
-        ble_transport.on_receive([this](std::span<const uint8_t> data) {
+BleTransporter::BleTransporter(uint16_t mtu, Ble::IBleHal &ble_hal)
+    : ChunkedTransporter(mtu), ble_hal(ble_hal) {
+        ble_hal.on_receive([this](std::span<const uint8_t> data) {
                 const auto result = feed(data);
                 if (result.failed()) {
                         Logging::logger().println(Logging::LogLevel::Error, TAG,
@@ -28,6 +28,6 @@ BleTransporter::BleTransporter(uint16_t mtu, Ble::IBleTransport &ble_transport)
 
 Result::Result<bool>
 BleTransporter::concrete_send(std::span<const uint8_t> data) {
-        return this->ble_transport.send(data);
+        return this->ble_hal.send(data);
 }
 } // namespace Transport

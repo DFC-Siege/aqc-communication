@@ -8,9 +8,9 @@
 
 namespace Transport {
 SerialTransporter::SerialTransporter(uint16_t mtu,
-                                     Serial::ISerialTransport &serial_transport)
-    : ChunkedTransporter(mtu), serial_transport(serial_transport) {
-        serial_transport.on_receive([this](std::span<const uint8_t> data) {
+                                     Serial::ISerialHal &serial_hal)
+    : ChunkedTransporter(mtu), serial_hal(serial_hal) {
+        serial_hal.on_receive([this](std::span<const uint8_t> data) {
                 const auto result = feed(data);
                 if (result.failed()) {
                         Logging::logger().println(Logging::LogLevel::Error, TAG,
@@ -30,6 +30,6 @@ SerialTransporter::SerialTransporter(uint16_t mtu,
 
 Result::Result<bool>
 SerialTransporter::concrete_send(std::span<const uint8_t> data) {
-        return this->serial_transport.send(data);
+        return this->serial_hal.send(data);
 }
 } // namespace Transport

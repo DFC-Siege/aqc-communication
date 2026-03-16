@@ -5,11 +5,11 @@
 #include <string>
 #include <vector>
 
-#include "i_serial_transport.hpp"
+#include "i_serial_hal.hpp"
 #include "result.hpp"
 
 namespace Serial {
-class SerialHal : public ISerialTransport {
+class SerialHal : public ISerialHal {
       public:
         SerialHal();
         Result::Result<bool> send(std::span<const uint8_t> data) override;
