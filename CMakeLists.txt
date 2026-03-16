@@ -7,8 +7,10 @@ set(EXTRA_COMPONENT_DIRS
     components/core/logger/console_logger
     components/core/store
     components/hal/esp32/logger/idf_logger
-    components/hal/esp32/ble_hal
-    components/hal/esp32/serial_hal
+    components/hal/ble_hal
+    components/hal/serial_hal
+    components/hal/esp32/esp32_ble_hal
+    components/hal/esp32/esp32_serial_hal
     components/hal/esp32/store/nvs_store
     components/transport
     components/transport/chunked_transport
