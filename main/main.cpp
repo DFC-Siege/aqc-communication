@@ -44,6 +44,23 @@ void app_main(void) {
         TickType_t last_wake_time = xTaskGetTickCount();
         const TickType_t interval = pdMS_TO_TICKS(1000);
 
+        const auto request_result =
+            communication_handler.ble_transporter.request(
+                0x01, std::span<const uint8_t>{},
+                [](std::span<const uint8_t> data) {
+                        Logging::logger().println("request complete");
+                },
+                [](std::string_view error) {
+                        Logging::logger().println_fmt(Logging::LogLevel::Error,
+                                                      "request error: {}",
+                                                      error);
+                });
+        if (request_result.failed()) {
+                Logging::logger().println_fmt(Logging::LogLevel::Error,
+                                              "request error: {}",
+                                              request_result.error());
+        }
+
         while (true) {
                 serial_manager.loop();
 
@@ -57,16 +74,23 @@ void app_main(void) {
                             reinterpret_cast<const uint8_t *>(str.data()),
                             str.size());
 
-                        communication_handler.ble_transporter.send(
-                            0x01, span,
-                            []() {
-                                    Logging::logger().println("send complete");
-                            },
-                            [](std::string_view error) {
-                                    Logging::logger().println_fmt(
-                                        Logging::LogLevel::Error,
-                                        "send error: {}", error);
-                            });
+                        const auto send_result =
+                            communication_handler.ble_transporter.send(
+                                0x01, span,
+                                []() {
+                                        Logging::logger().println(
+                                            "send complete");
+                                },
+                                [](std::string_view error) {
+                                        Logging::logger().println_fmt(
+                                            Logging::LogLevel::Error,
+                                            "send error: {}", error);
+                                });
+                        if (send_result.failed()) {
+                                Logging::logger().println_fmt(
+                                    Logging::LogLevel::Error, "send error: {}",
+                                    send_result.error());
+                        }
                 }
 
                 vTaskDelay(1);

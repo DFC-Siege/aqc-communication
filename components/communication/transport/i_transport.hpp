@@ -124,7 +124,7 @@ class ISender {
 class IReceiver {
       public:
         using CompleteCallback =
-            std::function<void(uint8_t command, std::vector<uint8_t> result)>;
+            std::function<void(std::vector<uint8_t> result)>;
 
         virtual ~IReceiver() = default;
         virtual Result::Result<bool> start(uint8_t session_id, uint8_t command,
