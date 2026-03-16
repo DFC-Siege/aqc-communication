@@ -6,6 +6,9 @@
 namespace Result {
 template <typename T> class Result {
       public:
+        Result() : fail(true) {
+        }
+
         Result(bool fail, std::string_view err, std::optional<T> val)
             : fail(fail), err(err), val(std::move(val)) {
         }
