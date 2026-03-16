@@ -9,15 +9,15 @@
 
 #include "ble_hal.hpp"
 #include "communication_handler.hpp"
+#include "console_logger.hpp"
 #include "logger.hpp"
 #include "nvs_store.hpp"
 #include "result.hpp"
 #include "serial_hal.hpp"
-#include "serial_logger.hpp"
 
 extern "C" {
 void app_main(void) {
-        Logging::Logger::set(std::make_unique<Logging::SerialLogger>());
+        Logging::Logger::set(std::make_unique<Logging::ConsoleLogger>());
 
         static constexpr auto DEFAULT_NAMESPACE = "default";
         auto store = Storage::KV::NvsStore::init(DEFAULT_NAMESPACE);

@@ -1,5 +1,5 @@
 idf_component_register(
-    SRCS "serial_logger.cpp"
+    SRCS "console_logger.cpp"
     INCLUDE_DIRS "."
     REQUIRES logger
 )
