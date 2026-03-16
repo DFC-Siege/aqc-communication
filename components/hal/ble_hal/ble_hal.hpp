@@ -9,12 +9,12 @@
 
 #include "i_ble_transport.hpp"
 
-namespace BLE {
+namespace Ble {
 
-class BLEManager : public IBLETransport {
+class BleHal : public IBleTransport {
       public:
-        static BLEManager &instance() {
-                static BLEManager inst;
+        static BleHal &instance() {
+                static BleHal inst;
                 return inst;
         }
 
@@ -31,8 +31,8 @@ class BLEManager : public IBLETransport {
                 return conn_handle != BLE_HS_CONN_HANDLE_NONE;
         }
 
-        BLEManager(const BLEManager &) = delete;
-        BLEManager &operator=(const BLEManager &) = delete;
+        BleHal(const BleHal &) = delete;
+        BleHal &operator=(const BleHal &) = delete;
 
         static int on_gap_event(ble_gap_event *event, void *arg);
         static int on_gatt_access(uint16_t conn_handle, uint16_t attr_handle,
@@ -52,9 +52,9 @@ class BLEManager : public IBLETransport {
                              0xe0, 0xa9, 0xe5, 0x0e, 0x24, 0xdc, 0xca, 0x9e);
         static const ble_gatt_svc_def gatt_services[];
 
-        BLEManager() = default;
+        BleHal() = default;
 
         void start_advertising();
 };
 
-} // namespace BLE
+} // namespace Ble

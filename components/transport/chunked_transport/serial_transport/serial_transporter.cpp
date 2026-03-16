@@ -1,21 +1,23 @@
 #include <cstdint>
 
-#include "ble_transporter.hpp"
 #include "chunked_sender.hpp"
 #include "chunked_transporter.hpp"
 #include "logger.hpp"
 #include "result.hpp"
+#include "serial_transporter.hpp"
 
 namespace Transport {
-BleTransporter::BleTransporter(uint16_t mtu, Ble::IBleTransport &ble_transport)
-    : ChunkedTransporter(mtu), ble_transport(ble_transport) {
-        ble_transport.on_receive([this](std::span<const uint8_t> data) {
+SerialTransporter::SerialTransporter(uint16_t mtu,
+                                     Serial::ISerialTransport &serial_transport)
+    : ChunkedTransporter(mtu), serial_transport(serial_transport) {
+        serial_transport.on_receive([this](std::span<const uint8_t> data) {
                 const auto result = feed(data);
                 if (result.failed()) {
                         Logging::logger().println(Logging::LogLevel::Error, TAG,
                                                   result.error());
                         return;
                 }
+
                 const auto feed_result = result.value();
                 if (feed_result.second.failed() &&
                     error_callbacks.find(feed_result.first) !=
@@ -27,7 +29,7 @@ BleTransporter::BleTransporter(uint16_t mtu, Ble::IBleTransport &ble_transport)
 }
 
 Result::Result<bool>
-BleTransporter::concrete_send(std::span<const uint8_t> data) {
-        return this->ble_transport.send(data);
+SerialTransporter::concrete_send(std::span<const uint8_t> data) {
+        return this->serial_transport.send(data);
 }
 } // namespace Transport

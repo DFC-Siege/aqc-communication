@@ -11,13 +11,13 @@
 
 #include "ble_hal.hpp"
 
-namespace BLE {
+namespace Ble {
 
-static constexpr char TAG[] = "BLEManager";
+static constexpr char TAG[] = "BleHal";
 
-uint16_t BLEManager::tx_attr_handle = 0;
+uint16_t BleHal::tx_attr_handle = 0;
 
-const ble_gatt_svc_def BLEManager::gatt_services[] = {
+const ble_gatt_svc_def BleHal::gatt_services[] = {
     {
         .type = BLE_GATT_SVC_TYPE_PRIMARY,
         .uuid = &service_uuid.u,
@@ -25,14 +25,14 @@ const ble_gatt_svc_def BLEManager::gatt_services[] = {
             (ble_gatt_chr_def[]){
                 {
                     .uuid = &rx_uuid.u,
-                    .access_cb = BLEManager::on_gatt_access,
+                    .access_cb = BleHal::on_gatt_access,
                     .arg = nullptr,
                     .descriptors = nullptr,
                     .flags = BLE_GATT_CHR_F_WRITE | BLE_GATT_CHR_F_WRITE_NO_RSP,
                 },
                 {
                     .uuid = &tx_uuid.u,
-                    .access_cb = BLEManager::on_gatt_access,
+                    .access_cb = BleHal::on_gatt_access,
                     .arg = nullptr,
                     .descriptors = nullptr,
                     .flags = BLE_GATT_CHR_F_NOTIFY,
@@ -44,7 +44,7 @@ const ble_gatt_svc_def BLEManager::gatt_services[] = {
     {0},
 };
 
-void BLEManager::begin(std::string_view device_name) {
+void BleHal::begin(std::string_view device_name) {
         nimble_port_init();
 
         ble_hs_cfg.sync_cb = []() { instance().start_advertising(); };
@@ -61,7 +61,7 @@ void BLEManager::begin(std::string_view device_name) {
         });
 }
 
-Result::Result<bool> BLEManager::send(std::span<const uint8_t> data) {
+Result::Result<bool> BleHal::send(std::span<const uint8_t> data) {
         if (!is_connected()) {
                 return Result::err("ble not connected");
         }
@@ -80,7 +80,7 @@ Result::Result<bool> BLEManager::send(std::span<const uint8_t> data) {
         return Result::ok();
 }
 
-void BLEManager::start_advertising() {
+void BleHal::start_advertising() {
         ble_hs_adv_fields fields = {};
         fields.flags = BLE_HS_ADV_F_DISC_GEN | BLE_HS_ADV_F_BREDR_UNSUP;
         fields.tx_pwr_lvl_is_present = 1;
@@ -101,7 +101,7 @@ void BLEManager::start_advertising() {
                           &adv_params, on_gap_event, nullptr);
 }
 
-int BLEManager::on_gap_event(ble_gap_event *event, void *) {
+int BleHal::on_gap_event(ble_gap_event *event, void *) {
         auto &self = instance();
 
         switch (event->type) {
@@ -130,8 +130,8 @@ int BLEManager::on_gap_event(ble_gap_event *event, void *) {
         return 0;
 }
 
-int BLEManager::on_gatt_access(uint16_t, uint16_t, ble_gatt_access_ctxt *ctxt,
-                               void *) {
+int BleHal::on_gatt_access(uint16_t, uint16_t, ble_gatt_access_ctxt *ctxt,
+                           void *) {
         auto &self = instance();
 
         if (ctxt->op == BLE_GATT_ACCESS_OP_WRITE_CHR) {
@@ -146,4 +146,4 @@ int BLEManager::on_gatt_access(uint16_t, uint16_t, ble_gatt_access_ctxt *ctxt,
         return 0;
 }
 
-} // namespace BLE
+} // namespace Ble

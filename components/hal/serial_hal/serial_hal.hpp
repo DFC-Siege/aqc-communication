@@ -6,16 +6,15 @@
 #include <vector>
 
 #include "i_serial_transport.hpp"
+#include "result.hpp"
 
 namespace Serial {
-class SerialManager : public ISerialTransport {
+class SerialHal : public ISerialTransport {
       public:
-        SerialManager();
-        void send(std::span<const uint8_t> data) override;
-        void on_receive(ReceiveCallback cb) override {
-                receive_callback = std::move(cb);
-        }
-        void loop();
+        SerialHal();
+        Result::Result<bool> send(std::span<const uint8_t> data) override;
+        void on_receive(ReceiveCallback cb) override;
+        Result::Result<bool> loop() override;
 
       private:
         static constexpr auto BAUDRATE = 115200;

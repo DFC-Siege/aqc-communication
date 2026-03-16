@@ -2,10 +2,11 @@
 #include <driver/uart.h>
 #include <hal/uart_types.h>
 
+#include "result.hpp"
 #include "serial_hal.hpp"
 
 namespace Serial {
-SerialManager::SerialManager() {
+SerialHal::SerialHal() {
         uart_config_t uart_config = {.baud_rate = BAUDRATE,
                                      .data_bits = UART_DATA_8_BITS,
                                      .parity = UART_PARITY_DISABLE,
@@ -22,19 +23,38 @@ SerialManager::SerialManager() {
                      UART_PIN_NO_CHANGE);
 }
 
-void SerialManager::send(std::span<const uint8_t> data) {
-        uart_write_bytes(UART_NUM_1, data.data(), data.size());
+Result::Result<bool> SerialHal::send(std::span<const uint8_t> data) {
+        const auto response =
+            uart_write_bytes(UART_NUM_1, data.data(), data.size());
+        if (response < 0) {
+                return Result::err(
+                    "something went wrong while sending over serial");
+        }
+
+        return Result::ok();
 }
 
-void SerialManager::loop() {
+void SerialHal::on_receive(ReceiveCallback cb) {
+        receive_callback = std::move(cb);
+}
+
+Result::Result<bool> SerialHal::loop() {
         std::vector<uint8_t> data(BUF_SIZE);
         int length = uart_read_bytes(UART_NUM_1, data.data(), BUF_SIZE, 0);
-        if (length <= 0)
-                return;
+        if (length < 0) {
+                return Result::err(
+                    "something went wrong while reading over serial");
+        }
+
+        if (length == 0) {
+                return Result::ok();
+        }
+
         data.resize(length);
 
         if (receive_callback) {
                 receive_callback(data);
         }
+        return Result::ok();
 }
 } // namespace Serial

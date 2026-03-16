@@ -6,14 +6,14 @@
 
 #include "result.hpp"
 
-namespace BLE {
+namespace Ble {
 
 using ReceiveCallback = std::function<void(std::span<const uint8_t>)>;
 using ConnectionCallback = std::function<void(bool connected)>;
 
-class IBLETransport {
+class IBleTransport {
       public:
-        virtual ~IBLETransport() = default;
+        virtual ~IBleTransport() = default;
         virtual Result::Result<bool> send(std::span<const uint8_t> data) = 0;
         virtual void on_receive(ReceiveCallback cb) = 0;
         virtual void on_connection_changed(ConnectionCallback cb) = 0;
@@ -24,4 +24,4 @@ class IBLETransport {
         ConnectionCallback connection_callback;
 };
 
-} // namespace BLE
+} // namespace Ble

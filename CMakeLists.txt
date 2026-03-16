@@ -13,6 +13,7 @@ set(EXTRA_COMPONENT_DIRS
     components/transport
     components/transport/chunked_transport
     components/transport/chunked_transport/ble_transport
+    components/transport/chunked_transport/serial_transport
     components/communication
 )
 

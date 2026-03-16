@@ -29,14 +29,14 @@ void app_main(void) {
                 nvs_flash_init();
         }
 
-        auto &ble = BLE::BLEManager::instance();
+        auto &ble = Ble::BleHal::instance();
         ble.on_connection_changed([](bool connected) {
                 Logging::logger().println_fmt(
-                    "BLE {}", connected ? "connected" : "disconnected");
+                    "Ble {}", connected ? "connected" : "disconnected");
         });
         ble.begin("aqc");
 
-        Serial::SerialManager serial_hal;
+        Serial::SerialHal serial_hal;
         serial_hal.on_receive([](std::span<const uint8_t> data) {
                 Logging::logger().println(
                     "serial", std::string_view(
