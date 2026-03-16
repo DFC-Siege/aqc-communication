@@ -1,6 +1,7 @@
 #include <cstdint>
 #include <span>
 
+#include "chunked_receiver.hpp"
 #include "chunked_sender.hpp"
 #include "chunked_transporter.hpp"
 #include "future.hpp"
@@ -92,7 +93,29 @@ Result::Result<bool>
 ChunkedTransporter::request(uint8_t command, std::span<const uint8_t> payload,
                             IReceiver::CompleteCallback on_complete,
                             ErrorCallback on_error) {
-        return Result::err("not implemented");
+        const auto session_result = next_receiver_session();
+        if (session_result.failed()) {
+                return Result::err(session_result.error());
+        }
+        const auto session = session_result.value();
+
+        error_callbacks[session] = on_error;
+        receivers[session] = std::make_unique<ChunkedReceiver>(mtu, session);
+        const auto &receiver = receivers[session];
+        const auto result = receiver->start(
+            session, command, payload,
+            [this](std::span<const uint8_t> data) -> Result::Result<bool> {
+                    return this->concrete_send(data);
+            },
+            [on_complete, session, this](std::vector<uint8_t> data) {
+                    remove_receiver(session);
+                    on_complete(data);
+            });
+        if (result.failed()) {
+                return result;
+        }
+
+        return Result::ok();
 }
 
 std::shared_ptr<Future<Result::Result<std::span<const uint8_t>>>>

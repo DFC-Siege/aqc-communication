@@ -47,9 +47,12 @@ void app_main(void) {
         TickType_t last_wake_time = xTaskGetTickCount();
         const TickType_t interval = pdMS_TO_TICKS(1000);
 
+        const auto command = 0x01;
+        const auto data = std::span<const uint8_t>{};
+
         const auto request_result =
             communication_handler.ble_transporter.request(
-                0x01, std::span<const uint8_t>{},
+                command, data,
                 [](const auto response) {
                         Logging::logger().println("request complete");
                 },
@@ -64,15 +67,34 @@ void app_main(void) {
                                               request_result.error());
         }
 
-        const auto command = 0x01;
-        const auto data = std::span<const uint8_t>{};
-        const auto result =
-            communication_handler.ble_transporter.send_async(command, data)
+        const auto async_request_result =
+            communication_handler.ble_transporter.request_async(command, data)
                 ->get();
-        if (result.failed()) {
+        if (async_request_result.failed()) {
                 Logging::logger().println_fmt(Logging::LogLevel::Error,
                                               "request error: {}",
-                                              request_result.error());
+                                              async_request_result.error());
+        }
+
+        const auto send_result = communication_handler.ble_transporter.send(
+            command, data, []() { Logging::logger().println("send complete"); },
+            [](const auto error) {
+                    Logging::logger().println_fmt(Logging::LogLevel::Error,
+                                                  "send error: {}", error);
+            });
+        if (send_result.failed()) {
+                Logging::logger().println_fmt(Logging::LogLevel::Error,
+                                              "send error: {}",
+                                              send_result.error());
+        }
+
+        const auto async_send_result =
+            communication_handler.ble_transporter.send_async(command, data)
+                ->get();
+        if (async_send_result.failed()) {
+                Logging::logger().println_fmt(Logging::LogLevel::Error,
+                                              "request error: {}",
+                                              async_send_result.error());
         }
 
         while (true) {
