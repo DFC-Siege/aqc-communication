@@ -17,10 +17,10 @@
 
 extern "C" {
 void app_main(void) {
-        Logging::Logger::set(std::make_unique<Logging::ConsoleLogger>());
+        logging::Logger::set(std::make_unique<logging::ConsoleLogger>());
 
         static constexpr auto DEFAULT_NAMESPACE = "default";
-        auto store = Storage::KV::NvsStore::init(DEFAULT_NAMESPACE);
+        auto store = store::KV::NvsStore::init(DEFAULT_NAMESPACE);
 
         esp_err_t ret = nvs_flash_init();
         if (ret == ESP_ERR_NVS_NO_FREE_PAGES ||
@@ -31,14 +31,14 @@ void app_main(void) {
 
         auto &ble = Ble::BleHal::instance();
         ble.on_connection_changed([](bool connected) {
-                Logging::logger().println_fmt(
+                logging::logger().println_fmt(
                     "Ble {}", connected ? "connected" : "disconnected");
         });
         ble.begin("aqc");
 
         Serial::SerialHal serial_hal;
         serial_hal.on_receive([](std::span<const uint8_t> data) {
-                Logging::logger().println(
+                logging::logger().println(
                     "serial", std::string_view(
                                   reinterpret_cast<const char *>(data.data()),
                                   data.size()));
@@ -58,15 +58,15 @@ void app_main(void) {
             communication_handler.ble_transporter.request(
                 command, data,
                 [](const auto response) {
-                        Logging::logger().println("request complete");
+                        logging::logger().println("request complete");
                 },
                 [](const auto error) {
-                        Logging::logger().println_fmt(Logging::LogLevel::Error,
+                        logging::logger().println_fmt(logging::LogLevel::Error,
                                                       "request error: {}",
                                                       error);
                 });
         if (request_result.failed()) {
-                Logging::logger().println_fmt(Logging::LogLevel::Error,
+                logging::logger().println_fmt(logging::LogLevel::Error,
                                               "request error: {}",
                                               request_result.error());
         }
@@ -75,19 +75,19 @@ void app_main(void) {
             communication_handler.ble_transporter.request_async(command, data)
                 ->get();
         if (async_request_result.failed()) {
-                Logging::logger().println_fmt(Logging::LogLevel::Error,
+                logging::logger().println_fmt(logging::LogLevel::Error,
                                               "request error: {}",
                                               async_request_result.error());
         }
 
         const auto send_result = communication_handler.ble_transporter.send(
-            command, data, []() { Logging::logger().println("send complete"); },
+            command, data, []() { logging::logger().println("send complete"); },
             [](const auto error) {
-                    Logging::logger().println_fmt(Logging::LogLevel::Error,
+                    logging::logger().println_fmt(logging::LogLevel::Error,
                                                   "send error: {}", error);
             });
         if (send_result.failed()) {
-                Logging::logger().println_fmt(Logging::LogLevel::Error,
+                logging::logger().println_fmt(logging::LogLevel::Error,
                                               "send error: {}",
                                               send_result.error());
         }
@@ -96,7 +96,7 @@ void app_main(void) {
             communication_handler.ble_transporter.send_async(command, data)
                 ->get();
         if (async_send_result.failed()) {
-                Logging::logger().println_fmt(Logging::LogLevel::Error,
+                logging::logger().println_fmt(logging::LogLevel::Error,
                                               "request error: {}",
                                               async_send_result.error());
         }
@@ -108,7 +108,7 @@ void app_main(void) {
                 if (current_time - last_wake_time >= interval) {
                         last_wake_time = current_time;
                         const auto str = std::to_string(counter++);
-                        Logging::logger().println_fmt("count: {}", str);
+                        logging::logger().println_fmt("count: {}", str);
 
                         const auto span = std::span<const uint8_t>(
                             reinterpret_cast<const uint8_t *>(str.data()),
@@ -118,17 +118,17 @@ void app_main(void) {
                             communication_handler.ble_transporter.send(
                                 0x01, span,
                                 []() {
-                                        Logging::logger().println(
+                                        logging::logger().println(
                                             "send complete");
                                 },
                                 [](std::string_view error) {
-                                        Logging::logger().println_fmt(
-                                            Logging::LogLevel::Error,
+                                        logging::logger().println_fmt(
+                                            logging::LogLevel::Error,
                                             "send error: {}", error);
                                 });
                         if (send_result.failed()) {
-                                Logging::logger().println_fmt(
-                                    Logging::LogLevel::Error, "send error: {}",
+                                logging::logger().println_fmt(
+                                    logging::LogLevel::Error, "send error: {}",
                                     send_result.error());
                         }
                 }

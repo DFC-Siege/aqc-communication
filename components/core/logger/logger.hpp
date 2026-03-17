@@ -4,7 +4,7 @@
 
 #include "i_logger.hpp"
 
-namespace Logging {
+namespace logging {
 class NullLogger : public ILogger {
       public:
         void print(LogLevel, std::string_view, std::string_view) override{};
@@ -24,4 +24,4 @@ class Logger {
 inline ILogger &logger() {
         return Logger::instance();
 }
-} // namespace Logging
+} // namespace logging

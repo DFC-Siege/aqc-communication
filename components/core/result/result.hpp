@@ -3,7 +3,7 @@
 #include <optional>
 #include <string_view>
 
-namespace Result {
+namespace result {
 template <typename T> class Result {
       public:
         Result() : fail(true) {
@@ -84,4 +84,4 @@ template <typename T> RefResult<T> ok_ref(T &value) {
         return RefResult<T>{false, "", &value};
 }
 
-} // namespace Result
+} // namespace result

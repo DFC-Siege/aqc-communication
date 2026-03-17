@@ -7,15 +7,15 @@
 #include "packet.hpp"
 #include "result.hpp"
 
-namespace Transport {
+namespace transport {
 class ChunkedReceiver : public IReceiver {
       public:
         ChunkedReceiver(uint16_t mtu, uint8_t max_attempts);
-        Result::Result<bool>
+        result::Result<bool>
         start(uint8_t session_id, uint8_t command,
               std::span<const uint8_t> payload, SendCallback sender,
               IReceiver::CompleteCallback on_complete) override;
-        Result::Result<bool> receive(std::span<const uint8_t> data) override;
+        result::Result<bool> receive(std::span<const uint8_t> data) override;
 
       private:
         std::vector<Chunk> received_chunks;
@@ -25,6 +25,6 @@ class ChunkedReceiver : public IReceiver {
         uint8_t current_attempt = 0;
 
         std::vector<uint8_t> reconstruct_data(std::vector<Chunk> chunks) const;
-        Result::Result<bool> ack(bool success);
+        result::Result<bool> ack(bool success);
 };
-} // namespace Transport
+} // namespace transport

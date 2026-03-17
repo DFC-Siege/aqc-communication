@@ -5,7 +5,7 @@
 #include <span>
 #include <vector>
 
-namespace Transport {
+namespace transport {
 static uint16_t crc16(std::span<const uint8_t> data) {
         uint16_t crc = 0;
         for (const auto byte : data) {
@@ -35,12 +35,12 @@ struct Ack {
                         static_cast<uint8_t>(success)};
         }
 
-        static Result::Result<Ack> from_buf(std::span<const uint8_t> buf) {
+        static result::Result<Ack> from_buf(std::span<const uint8_t> buf) {
                 if (buf.size() < 5)
-                        return Result::err("buffer too small");
+                        return result::err("buffer too small");
                 if (static_cast<PacketType>(buf[0]) != PacketType::ack)
-                        return Result::err("invalid packet type");
-                return Result::ok(
+                        return result::err("invalid packet type");
+                return result::ok(
                     Ack{static_cast<uint16_t>(buf[1] | (buf[2] << 8)), buf[3],
                         static_cast<bool>(buf[4])});
         }
@@ -75,11 +75,11 @@ struct Chunk {
                 return buf;
         }
 
-        static Result::Result<Chunk> from_buf(std::span<const uint8_t> buf) {
+        static result::Result<Chunk> from_buf(std::span<const uint8_t> buf) {
                 if (buf.size() < HEADER_SIZE)
-                        return Result::err("buffer too small");
+                        return result::err("buffer too small");
                 if (static_cast<PacketType>(buf[0]) != PacketType::chunk)
-                        return Result::err("invalid packet type");
+                        return result::err("invalid packet type");
 
                 auto pull16 = [&](size_t offset) -> uint16_t {
                         return static_cast<uint16_t>(buf[offset] |
@@ -97,9 +97,9 @@ struct Chunk {
 
                 const auto computed = crc16(chunk.payload);
                 if (computed != chunk.checksum)
-                        return Result::err("checksum mismatch");
+                        return result::err("checksum mismatch");
 
-                return Result::ok(std::move(chunk));
+                return result::ok(std::move(chunk));
         }
 };
-} // namespace Transport
+} // namespace transport

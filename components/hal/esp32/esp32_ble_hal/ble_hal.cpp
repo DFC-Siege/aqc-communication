@@ -61,23 +61,23 @@ void BleHal::begin(std::string_view device_name) {
         });
 }
 
-Result::Result<bool> BleHal::send(std::span<const uint8_t> data) {
+result::Result<bool> BleHal::send(std::span<const uint8_t> data) {
         if (!is_connected()) {
-                return Result::err("ble not connected");
+                return result::err("ble not connected");
         }
 
         os_mbuf *om = ble_hs_mbuf_from_flat(data.data(), data.size());
         if (!om) {
-                return Result::err("error creating buffer");
+                return result::err("error creating buffer");
         }
 
         const auto result =
             ble_gatts_notify_custom(conn_handle, tx_attr_handle, om);
         if (result != 0) {
-                return Result::err("error sending data");
+                return result::err("error sending data");
         }
 
-        return Result::ok();
+        return result::ok();
 }
 
 void BleHal::start_advertising() {

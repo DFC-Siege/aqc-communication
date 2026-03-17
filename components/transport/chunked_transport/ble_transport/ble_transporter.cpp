@@ -6,13 +6,13 @@
 #include "logger.hpp"
 #include "result.hpp"
 
-namespace Transport {
+namespace transport {
 BleTransporter::BleTransporter(uint16_t mtu, Ble::IBleHal &ble_hal)
     : ChunkedTransporter(mtu), ble_hal(ble_hal) {
         ble_hal.on_receive([this](std::span<const uint8_t> data) {
                 const auto result = feed(data);
                 if (result.failed()) {
-                        Logging::logger().println(Logging::LogLevel::Error, TAG,
+                        logging::logger().println(logging::LogLevel::Error, TAG,
                                                   result.error());
                         return;
                 }
@@ -26,8 +26,8 @@ BleTransporter::BleTransporter(uint16_t mtu, Ble::IBleHal &ble_hal)
         });
 }
 
-Result::Result<bool>
+result::Result<bool>
 BleTransporter::concrete_send(std::span<const uint8_t> data) {
         return this->ble_hal.send(data);
 }
-} // namespace Transport
+} // namespace transport

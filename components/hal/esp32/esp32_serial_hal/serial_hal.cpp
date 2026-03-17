@@ -23,31 +23,31 @@ SerialHal::SerialHal() {
                      UART_PIN_NO_CHANGE);
 }
 
-Result::Result<bool> SerialHal::send(std::span<const uint8_t> data) {
+result::Result<bool> SerialHal::send(std::span<const uint8_t> data) {
         const auto response =
             uart_write_bytes(UART_NUM_1, data.data(), data.size());
         if (response < 0) {
-                return Result::err(
+                return result::err(
                     "something went wrong while sending over serial");
         }
 
-        return Result::ok();
+        return result::ok();
 }
 
 void SerialHal::on_receive(ReceiveCallback cb) {
         receive_callback = std::move(cb);
 }
 
-Result::Result<bool> SerialHal::loop() {
+result::Result<bool> SerialHal::loop() {
         std::vector<uint8_t> data(BUF_SIZE);
         int length = uart_read_bytes(UART_NUM_1, data.data(), BUF_SIZE, 0);
         if (length < 0) {
-                return Result::err(
+                return result::err(
                     "something went wrong while reading over serial");
         }
 
         if (length == 0) {
-                return Result::ok();
+                return result::ok();
         }
 
         data.resize(length);
@@ -55,6 +55,6 @@ Result::Result<bool> SerialHal::loop() {
         if (receive_callback) {
                 receive_callback(data);
         }
-        return Result::ok();
+        return result::ok();
 }
 } // namespace Serial

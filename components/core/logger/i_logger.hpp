@@ -3,7 +3,7 @@
 #include <format>
 #include <string_view>
 
-namespace Logging {
+namespace logging {
 
 enum class LogLevel { Verbose, Debug, Info, Warning, Error, Fatal, None };
 
@@ -109,4 +109,4 @@ class ILogger {
         LogLevel level = LogLevel::Info;
 };
 
-} // namespace Logging
+} // namespace logging

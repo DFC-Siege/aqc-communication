@@ -6,14 +6,14 @@
 #include "result.hpp"
 #include "serial_transporter.hpp"
 
-namespace Transport {
+namespace transport {
 SerialTransporter::SerialTransporter(uint16_t mtu,
                                      Serial::ISerialHal &serial_hal)
     : ChunkedTransporter(mtu), serial_hal(serial_hal) {
         serial_hal.on_receive([this](std::span<const uint8_t> data) {
                 const auto result = feed(data);
                 if (result.failed()) {
-                        Logging::logger().println(Logging::LogLevel::Error, TAG,
+                        logging::logger().println(logging::LogLevel::Error, TAG,
                                                   result.error());
                         return;
                 }
@@ -28,8 +28,8 @@ SerialTransporter::SerialTransporter(uint16_t mtu,
         });
 }
 
-Result::Result<bool>
+result::Result<bool>
 SerialTransporter::concrete_send(std::span<const uint8_t> data) {
         return this->serial_hal.send(data);
 }
-} // namespace Transport
+} // namespace transport

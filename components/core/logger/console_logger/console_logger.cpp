@@ -1,7 +1,7 @@
 #include "console_logger.hpp"
 #include "i_logger.hpp"
 
-namespace Logging {
+namespace logging {
 void ConsoleLogger::print(LogLevel level, std::string_view tag,
                           std::string_view value) {
         if (!check_level(level)) {
@@ -26,4 +26,4 @@ void ConsoleLogger::println(LogLevel level, std::string_view tag,
 bool ConsoleLogger::check_level(LogLevel level) {
         return this->level >= level;
 }
-} // namespace Logging
+} // namespace logging

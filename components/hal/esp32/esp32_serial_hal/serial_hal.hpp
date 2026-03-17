@@ -12,9 +12,9 @@ namespace Serial {
 class SerialHal : public ISerialHal {
       public:
         SerialHal();
-        Result::Result<bool> send(std::span<const uint8_t> data) override;
+        result::Result<bool> send(std::span<const uint8_t> data) override;
         void on_receive(ReceiveCallback cb) override;
-        Result::Result<bool> loop() override;
+        result::Result<bool> loop() override;
 
       private:
         static constexpr auto BAUDRATE = 115200;

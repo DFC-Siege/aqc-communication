@@ -5,7 +5,7 @@
 #include "nvs_store.hpp"
 #include "result.hpp"
 
-namespace Storage {
+namespace store {
 namespace KV {
 bool NvsStore::has_initialized = false;
 
@@ -16,7 +16,7 @@ void NvsStore::assert_initialized() {
 NvsStore::NvsStore(std::string_view ns) : ns(ns) {
 }
 
-Result::Result<bool> NvsStore::try_init(int count) {
+result::Result<bool> NvsStore::try_init(int count) {
         auto err = nvs_flash_init();
         switch (err) {
         case ESP_OK:
@@ -24,27 +24,27 @@ Result::Result<bool> NvsStore::try_init(int count) {
         case ESP_ERR_NVS_NEW_VERSION_FOUND:
         case ESP_ERR_NVS_NO_FREE_PAGES: {
                 if (count > MAX_INIT_TRIES) {
-                        return Result::err("failed to init nvs after " +
+                        return result::err("failed to init nvs after " +
                                            std::to_string(count) + " tries");
                 }
                 return NvsStore::try_init(count++);
         }
         case ESP_ERR_NOT_FOUND:
-                return Result::err("no partition with label \"nvs\" found in "
+                return result::err("no partition with label \"nvs\" found in "
                                    "the partition table");
         case ESP_ERR_NO_MEM:
-                return Result::err(
+                return result::err(
                     "esp doesn't have enough memory to init nvs");
         default:
-                return Result::err("an unknown error has occured while "
+                return result::err("an unknown error has occured while "
                                    "trying to initialize the NVS");
         }
 
         has_initialized = true;
-        return Result::ok();
+        return result::ok();
 }
 
-Result::Result<bool> NvsStore::try_open() {
+result::Result<bool> NvsStore::try_open() {
         NvsStore::assert_initialized();
 
         auto ret = nvs_open(std::string(ns).c_str(), NVS_READWRITE, &handle);
@@ -52,46 +52,46 @@ Result::Result<bool> NvsStore::try_open() {
         case ESP_OK:
                 break;
         case ESP_FAIL:
-                return Result::err("nvs partition corrupted");
+                return result::err("nvs partition corrupted");
         case ESP_ERR_NVS_NOT_INITIALIZED:
-                return Result::err("nvs not initialized");
+                return result::err("nvs not initialized");
         case ESP_ERR_NVS_PART_NOT_FOUND:
-                return Result::err("nvs partition not found");
+                return result::err("nvs partition not found");
         case ESP_ERR_NVS_NOT_FOUND:
-                return Result::err("namespace not found");
+                return result::err("namespace not found");
         case ESP_ERR_NVS_INVALID_NAME:
-                return Result::err("invalid namespace name");
+                return result::err("invalid namespace name");
         case ESP_ERR_NO_MEM:
-                return Result::err("out of memory");
+                return result::err("out of memory");
         case ESP_ERR_NVS_NOT_ENOUGH_SPACE:
-                return Result::err("not enough space");
+                return result::err("not enough space");
         case ESP_ERR_NOT_ALLOWED:
-                return Result::err("partition is read only");
+                return result::err("partition is read only");
         case ESP_ERR_INVALID_ARG:
-                return Result::err("invalid argument");
+                return result::err("invalid argument");
         default:
-                return Result::err("unknown error");
+                return result::err("unknown error");
         }
 
-        return Result::ok();
+        return result::ok();
 }
 
-Result::Result<NvsStore> NvsStore::init(std::string_view ns) {
+result::Result<NvsStore> NvsStore::init(std::string_view ns) {
         auto result = try_init();
         if (result.failed()) {
-                return Result::err(result.error());
+                return result::err(result.error());
         }
 
         auto store = NvsStore(ns);
         result = store.try_open();
         if (result.failed()) {
-                return Result::err(result.error());
+                return result::err(result.error());
         }
 
-        return Result::ok(store);
+        return result::ok(store);
 }
 
-Result::Result<bool> NvsStore::store(std::string_view key,
+result::Result<bool> NvsStore::store(std::string_view key,
                                      std::string_view value) {
         NvsStore::assert_initialized();
 
@@ -101,21 +101,21 @@ Result::Result<bool> NvsStore::store(std::string_view key,
         case ESP_OK:
                 break;
         case ESP_ERR_NVS_INVALID_HANDLE:
-                return Result::err("invalid handle");
+                return result::err("invalid handle");
         case ESP_ERR_NVS_READ_ONLY:
-                return Result::err("storage is opened as read only");
+                return result::err("storage is opened as read only");
         case ESP_ERR_NVS_INVALID_NAME:
-                return Result::err("key name doesn't satisfy constraints");
+                return result::err("key name doesn't satisfy constraints");
         case ESP_ERR_NVS_NOT_ENOUGH_SPACE:
-                return Result::err("not enough space in the storage");
+                return result::err("not enough space in the storage");
         case ESP_ERR_NVS_REMOVE_FAILED:
-                return Result::err(
+                return result::err(
                     "value was written but storage failed to update flash. "
                     "update will finish after reinitialization");
         case ESP_ERR_NVS_VALUE_TOO_LONG:
-                return Result::err("value is too long");
+                return result::err("value is too long");
         default:
-                return Result::err(
+                return result::err(
                     "an unknown error occured while setting string");
         }
 
@@ -124,36 +124,36 @@ Result::Result<bool> NvsStore::store(std::string_view key,
         case ESP_OK:
                 break;
         case ESP_ERR_NVS_INVALID_HANDLE:
-                return Result::err("invalid handle");
+                return result::err("invalid handle");
         default:
-                return Result::err(
+                return result::err(
                     "an unknown error occured while commiting to nvs");
         }
 
-        return Result::ok();
+        return result::ok();
 }
 
-Result::Result<std::string> NvsStore::get(std::string_view key) {
+result::Result<std::string> NvsStore::get(std::string_view key) {
         NvsStore::assert_initialized();
 
         const auto key_str = std::string(key);
 
-        auto check = [](esp_err_t ret) -> Result::Result<bool> {
+        auto check = [](esp_err_t ret) -> result::Result<bool> {
                 switch (ret) {
                 case ESP_OK:
-                        return Result::ok();
+                        return result::ok();
                 case ESP_ERR_NVS_NOT_FOUND:
-                        return Result::err("key not found");
+                        return result::err("key not found");
                 case ESP_ERR_NVS_INVALID_HANDLE:
-                        return Result::err("invalid handle");
+                        return result::err("invalid handle");
                 case ESP_ERR_NVS_INVALID_NAME:
-                        return Result::err("invalid key name");
+                        return result::err("invalid key name");
                 case ESP_ERR_NVS_INVALID_LENGTH:
-                        return Result::err("invalid length");
+                        return result::err("invalid length");
                 case ESP_FAIL:
-                        return Result::err("nvs corrupted");
+                        return result::err("nvs corrupted");
                 default:
-                        return Result::err("unknown error");
+                        return result::err("unknown error");
                 }
         };
 
@@ -161,14 +161,14 @@ Result::Result<std::string> NvsStore::get(std::string_view key) {
         auto result =
             check(nvs_get_str(handle, key_str.c_str(), nullptr, &len));
         if (result.failed())
-                return Result::err(result.error());
+                return result::err(result.error());
 
         std::string str(len, '\0');
         result = check(nvs_get_str(handle, key_str.c_str(), str.data(), &len));
         if (result.failed())
-                return Result::err(result.error());
+                return result::err(result.error());
 
-        return Result::ok(str);
+        return result::ok(str);
 }
 } // namespace KV
-} // namespace Storage
+} // namespace store

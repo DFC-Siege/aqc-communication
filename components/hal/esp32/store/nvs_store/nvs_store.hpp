@@ -6,16 +6,16 @@
 #include "i_store.hpp"
 #include "result.hpp"
 
-namespace Storage {
+namespace store {
 namespace KV {
 class NvsStore : public IStore {
       public:
-        static Result::Result<NvsStore> init(std::string_view ns);
+        static result::Result<NvsStore> init(std::string_view ns);
 
-        Result::Result<bool> store(std::string_view key,
+        result::Result<bool> store(std::string_view key,
                                    std::string_view value) override;
 
-        Result::Result<std::string> get(std::string_view key) override;
+        result::Result<std::string> get(std::string_view key) override;
 
       private:
         static constexpr auto MAX_INIT_TRIES = 3;
@@ -26,8 +26,8 @@ class NvsStore : public IStore {
         NvsStore(std::string_view ns);
         static void assert_initialized();
 
-        Result::Result<bool> try_open();
-        static Result::Result<bool> try_init(int count = 0);
+        result::Result<bool> try_open();
+        static result::Result<bool> try_init(int count = 0);
 };
 } // namespace KV
-} // namespace Storage
+} // namespace store

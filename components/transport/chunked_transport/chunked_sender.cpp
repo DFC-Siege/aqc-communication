@@ -6,12 +6,12 @@
 #include "i_transport.hpp"
 #include "result.hpp"
 
-namespace Transport {
+namespace transport {
 ChunkedSender::ChunkedSender(uint16_t mtu, uint8_t max_attempts)
     : mtu(mtu), max_attempts(max_attempts) {
 }
 
-Result::Result<bool>
+result::Result<bool>
 ChunkedSender::send(uint8_t session_id, uint8_t command,
                     std::span<const uint8_t> data, SendCallback sender,
                     ISender::CompleteCallback on_complete) {
@@ -25,57 +25,57 @@ ChunkedSender::send(uint8_t session_id, uint8_t command,
 
         const auto result = create_chunks(data);
         if (result.failed()) {
-                return Result::err(result.error());
+                return result::err(result.error());
         }
         chunked_data = result.value();
 
         const auto chunk_result = get_chunk();
         if (chunk_result.failed()) {
-                return Result::err(chunk_result.error());
+                return result::err(chunk_result.error());
         }
         const auto chunk = chunk_result.value();
         return this->sender(chunk.to_buf());
 }
 
-Result::Result<bool> ChunkedSender::receive(std::span<const uint8_t> data) {
+result::Result<bool> ChunkedSender::receive(std::span<const uint8_t> data) {
         assert(sender != nullptr && "sender should not be null");
         const auto result = Ack::from_buf(data);
         if (result.failed()) {
-                return Result::err(result.error());
+                return result::err(result.error());
         }
 
         const auto ack = result.value();
         if (!ack.success) {
                 const auto repeat_result = repeat();
                 if (repeat_result.failed()) {
-                        return Result::err(repeat_result.error());
+                        return result::err(repeat_result.error());
                 }
                 const auto chunk = repeat_result.value();
                 return sender(chunk.to_buf());
         }
 
         if (chunked_data.empty()) {
-                return Result::err("chunked data is empty");
+                return result::err("chunked data is empty");
         }
 
         if (current_index == chunked_data.size() - 1) {
                 on_complete();
-                return Result::ok();
+                return result::ok();
         }
 
         const auto next_result = get_next();
         if (next_result.failed()) {
-                return Result::err(next_result.error());
+                return result::err(next_result.error());
         }
 
         const auto chunk = next_result.value();
         return sender(chunk.to_buf());
 }
 
-Result::Result<std::vector<Chunk>>
+result::Result<std::vector<Chunk>>
 ChunkedSender::create_chunks(std::span<const uint8_t> data) const {
         if (mtu <= Chunk::HEADER_SIZE) {
-                return Result::err("mtu too small");
+                return result::err("mtu too small");
         }
         const auto payload_size = mtu - Chunk::HEADER_SIZE;
 
@@ -104,30 +104,30 @@ ChunkedSender::create_chunks(std::span<const uint8_t> data) const {
                                     session_id, command);
         }
 
-        return Result::ok(std::move(chunks));
+        return result::ok(std::move(chunks));
 }
 
-Result::Result<Chunk> ChunkedSender::get_next() {
+result::Result<Chunk> ChunkedSender::get_next() {
         if (++current_index >= chunked_data.size()) {
-                return Result::err("index out of bounds getting next");
+                return result::err("index out of bounds getting next");
         }
 
         current_attempt = 0;
         return get_chunk();
 }
 
-Result::Result<Chunk> ChunkedSender::repeat() {
+result::Result<Chunk> ChunkedSender::repeat() {
         if (++current_attempt >= max_attempts) {
-                return Result::err("max attempts reached");
+                return result::err("max attempts reached");
         }
         return get_chunk();
 }
 
-Result::Result<Chunk> ChunkedSender::get_chunk() {
+result::Result<Chunk> ChunkedSender::get_chunk() {
         if (current_index >= chunked_data.size()) {
-                return Result::err("index out of bound repeating");
+                return result::err("index out of bound repeating");
         }
 
-        return Result::ok(chunked_data.at(current_index));
+        return result::ok(chunked_data.at(current_index));
 }
-} // namespace Transport
+} // namespace transport

@@ -8,16 +8,16 @@
 #include "i_transport.hpp"
 #include "result.hpp"
 
-namespace Transport {
+namespace transport {
 class SerialTransporter : public ChunkedTransporter {
       public:
         SerialTransporter(uint16_t mtu, Serial::ISerialHal &serial_hal);
 
-        Result::Result<bool>
+        result::Result<bool>
         concrete_send(std::span<const uint8_t> data) override;
 
       private:
         static constexpr auto TAG = "SerialTransporter";
         Serial::ISerialHal &serial_hal;
 };
-} // namespace Transport
+} // namespace transport

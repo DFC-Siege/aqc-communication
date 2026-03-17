@@ -6,17 +6,17 @@
 #include "i_transport.hpp"
 #include "result.hpp"
 
-namespace Transport {
+namespace transport {
 ChunkedReceiver::ChunkedReceiver(uint16_t mtu, uint8_t max_attempts)
     : mtu(mtu), max_attempts(max_attempts) {
 }
 
-Result::Result<bool>
+result::Result<bool>
 ChunkedReceiver::start(uint8_t session_id, uint8_t command,
                        std::span<const uint8_t> payload, SendCallback sender,
                        IReceiver::CompleteCallback on_complete) {
         if (payload.size() + Chunk::HEADER_SIZE > mtu) {
-                return Result::err("payload is too large");
+                return result::err("payload is too large");
         }
 
         this->session_id = session_id;
@@ -38,7 +38,7 @@ ChunkedReceiver::start(uint8_t session_id, uint8_t command,
         return this->sender(chunk.to_buf());
 }
 
-Result::Result<bool> ChunkedReceiver::receive(std::span<const uint8_t> data) {
+result::Result<bool> ChunkedReceiver::receive(std::span<const uint8_t> data) {
         const auto chunk_result = Chunk::from_buf(data);
         if (chunk_result.failed()) {
                 return ack(false);
@@ -82,9 +82,9 @@ ChunkedReceiver::reconstruct_data(std::vector<Chunk> chunks) const {
         return reconstruct_data;
 }
 
-Result::Result<bool> ChunkedReceiver::ack(bool success) {
+result::Result<bool> ChunkedReceiver::ack(bool success) {
         if (!success && ++current_attempt > max_attempts) {
-                return Result::err("max attempts reached");
+                return result::err("max attempts reached");
         } else if (success) {
                 current_attempt = 0;
         }
@@ -100,4 +100,4 @@ Result::Result<bool> ChunkedReceiver::ack(bool success) {
         };
         return this->sender(ack.to_buf());
 }
-} // namespace Transport
+} // namespace transport

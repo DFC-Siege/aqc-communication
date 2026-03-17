@@ -4,7 +4,7 @@
 #include "i_logger.hpp"
 #include "idf_logger.hpp"
 
-namespace Logging {
+namespace logging {
 
 void IdfLogger::print(LogLevel level, std::string_view tag,
                       std::string_view value) {
@@ -37,4 +37,4 @@ void IdfLogger::println(LogLevel level, std::string_view tag,
                         std::string_view value) {
         print(level, tag, value);
 }
-} // namespace Logging
+} // namespace logging

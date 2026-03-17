@@ -2,7 +2,7 @@
 
 #include "i_logger.hpp"
 
-namespace Logging {
+namespace logging {
 class ConsoleLogger : public ILogger {
       public:
         void print(LogLevel level, std::string_view tag,
@@ -13,4 +13,4 @@ class ConsoleLogger : public ILogger {
       private:
         bool check_level(LogLevel level);
 };
-} // namespace Logging
+} // namespace logging

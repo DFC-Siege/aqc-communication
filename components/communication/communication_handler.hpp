@@ -10,8 +10,8 @@
 namespace Communication {
 class CommunicationHandler {
       public:
-        Transport::BleTransporter ble_transporter;
-        Transport::SerialTransporter serial_transporter;
+        transport::BleTransporter ble_transporter;
+        transport::SerialTransporter serial_transporter;
 
         CommunicationHandler(Ble::IBleHal &ble_hal,
                              Serial::ISerialHal &serial_hal);
