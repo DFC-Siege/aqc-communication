@@ -32,7 +32,12 @@ class ChunkedTransporter : public ITransporter {
                       std::span<const uint8_t> payload) override;
 
       protected:
+        std::unordered_map<uint8_t, std::unique_ptr<ISender>> senders;
+        std::unordered_map<uint8_t, std::unique_ptr<IReceiver>> receivers;
         std::unordered_map<uint8_t, ErrorCallback> error_callbacks;
+        std::set<uint8_t> available_sender_sessions;
+        std::set<uint8_t> available_receiver_sessions;
+        uint8_t next_session_id = 0;
         uint16_t mtu;
 
         result::Result<uint8_t> next_receiver_session();

@@ -4,6 +4,7 @@
 #include "chunked_receiver.hpp"
 #include "chunked_sender.hpp"
 #include "chunked_transporter.hpp"
+#include "i_transport.hpp"
 #include "packet.hpp"
 #include "result.hpp"
 
@@ -15,7 +16,7 @@ ChunkedTransporter::ChunkedTransporter(uint16_t mtu) : mtu(mtu) {
         }
 }
 
-result::Result<ChunkedTransporter::FeedResult>
+result::Result<FeedResult>
 ChunkedTransporter::feed(std::span<const uint8_t> data) {
         if (data.empty())
                 return result::err("data is empty");
@@ -28,8 +29,9 @@ ChunkedTransporter::feed(std::span<const uint8_t> data) {
                 auto it = receivers.find(session_id);
                 if (it == receivers.end())
                         return result::err("unknown session");
-                return result::ok(
-                    std::make_pair(session_id, it->second->receive(data)));
+                const FeedResult feed_result{session_id,
+                                             it->second->receive(data)};
+                return result::ok(feed_result);
         }
         case PacketType::ack: {
                 if (data.size() < 5)
@@ -38,8 +40,9 @@ ChunkedTransporter::feed(std::span<const uint8_t> data) {
                 auto it = senders.find(session_id);
                 if (it == senders.end())
                         return result::err("unknown session");
-                return result::ok(
-                    std::make_pair(session_id, it->second->receive(data)));
+                const FeedResult feed_result{session_id,
+                                             it->second->receive(data)};
+                return result::ok(feed_result);
         }
         default:
                 return result::err("unknown packet type");

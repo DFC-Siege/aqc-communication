@@ -18,6 +18,12 @@ class ChunkedSender : public ISender {
              ISender::CompleteCallback on_complete) override;
         result::Result<bool> receive(std::span<const uint8_t> data) override;
 
+      protected:
+        uint8_t session_id;
+        uint8_t command;
+        SendCallback sender;
+        CompleteCallback on_complete;
+
       private:
         std::vector<Chunk> chunked_data;
         uint16_t mtu;

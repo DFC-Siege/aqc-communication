@@ -17,11 +17,11 @@ BleTransporter::BleTransporter(uint16_t mtu, ble::IBleHal &ble_hal)
                         return;
                 }
                 const auto feed_result = result.value();
-                if (feed_result.second.failed() &&
-                    error_callbacks.find(feed_result.first) !=
+                if (feed_result.result.failed() &&
+                    error_callbacks.find(feed_result.session_id) !=
                         error_callbacks.end()) {
-                        error_callbacks[feed_result.first](
-                            feed_result.second.error());
+                        error_callbacks[feed_result.session_id](
+                            feed_result.result.error());
                 }
         });
 }
