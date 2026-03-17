@@ -3,7 +3,7 @@
 #include "i_logger.hpp"
 
 namespace logging {
-class IdfLogger : public ILogger {
+class IdfLogger : public BaseLogger {
       public:
         // INFO: ESP logging automatically appends newlines so print and println
         // are the same

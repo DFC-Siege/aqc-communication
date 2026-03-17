@@ -5,7 +5,7 @@
 #include "i_logger.hpp"
 
 namespace logging {
-class NullLogger : public ILogger {
+class NullLogger : public BaseLogger {
       public:
         void print(LogLevel, std::string_view, std::string_view) override{};
         void println(LogLevel, std::string_view, std::string_view) override{};

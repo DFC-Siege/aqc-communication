@@ -1,5 +1,4 @@
 #pragma once
-
 #include <format>
 #include <string_view>
 
@@ -7,7 +6,7 @@ namespace logging {
 
 enum class LogLevel { Verbose, Debug, Info, Warning, Error, Fatal, None };
 
-static constexpr std::string_view level_to_string(LogLevel level) {
+constexpr std::string_view level_to_string(LogLevel level) {
         switch (level) {
         case LogLevel::Verbose:
                 return "V";
@@ -26,37 +25,29 @@ static constexpr std::string_view level_to_string(LogLevel level) {
         }
 }
 
-class ILogger {
-      public:
+struct ILogger {
         virtual ~ILogger() = default;
         virtual void print(LogLevel level, std::string_view tag,
                            std::string_view value) = 0;
         virtual void println(LogLevel level, std::string_view tag,
                              std::string_view value) = 0;
-
-        void set_level(LogLevel l) {
-                level = l;
-        }
-
-        LogLevel get_level() const {
-                return level;
-        }
+        virtual LogLevel get_level() const = 0;
 
         void print(std::string_view value) {
-                print(level, "", value);
+                print(get_level(), "", value);
         }
         void print(std::string_view tag, std::string_view value) {
-                print(level, tag, value);
+                print(get_level(), tag, value);
         }
         void print(LogLevel l, std::string_view value) {
                 print(l, "", value);
         }
 
         void println(std::string_view value) {
-                println(level, "", value);
+                println(get_level(), "", value);
         }
         void println(std::string_view tag, std::string_view value) {
-                println(level, tag, value);
+                println(get_level(), tag, value);
         }
         void println(LogLevel l, std::string_view value) {
                 println(l, "", value);
@@ -70,7 +61,7 @@ class ILogger {
         template <typename... Args>
         void print_fmt(std::string_view tag, std::format_string<Args...> fmt,
                        Args &&...args) {
-                print(level, tag,
+                print(get_level(), tag,
                       std::format(fmt, std::forward<Args>(args)...));
         }
         template <typename... Args>
@@ -80,7 +71,8 @@ class ILogger {
         }
         template <typename... Args>
         void print_fmt(std::format_string<Args...> fmt, Args &&...args) {
-                print(level, "", std::format(fmt, std::forward<Args>(args)...));
+                print(get_level(), "",
+                      std::format(fmt, std::forward<Args>(args)...));
         }
 
         template <typename... Args>
@@ -91,7 +83,7 @@ class ILogger {
         template <typename... Args>
         void println_fmt(std::string_view tag, std::format_string<Args...> fmt,
                          Args &&...args) {
-                println(level, tag,
+                println(get_level(), tag,
                         std::format(fmt, std::forward<Args>(args)...));
         }
         template <typename... Args>
@@ -101,8 +93,19 @@ class ILogger {
         }
         template <typename... Args>
         void println_fmt(std::format_string<Args...> fmt, Args &&...args) {
-                println(level, "",
+                println(get_level(), "",
                         std::format(fmt, std::forward<Args>(args)...));
+        }
+};
+
+class BaseLogger : public ILogger {
+      public:
+        LogLevel get_level() const override {
+                return level;
+        }
+
+        void set_level(LogLevel l) {
+                level = l;
         }
 
       protected:

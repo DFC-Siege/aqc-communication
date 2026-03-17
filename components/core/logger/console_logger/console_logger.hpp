@@ -3,7 +3,7 @@
 #include "i_logger.hpp"
 
 namespace logging {
-class ConsoleLogger : public ILogger {
+class ConsoleLogger : public BaseLogger {
       public:
         void print(LogLevel level, std::string_view tag,
                    std::string_view value) override;
