@@ -4,6 +4,7 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/semphr.h>
 
+namespace async {
 class Semaphore {
         SemaphoreHandle_t sem;
 
@@ -26,12 +27,14 @@ class Semaphore {
                 return xSemaphoreTake(sem, portMAX_DELAY) == pdTRUE;
         }
 };
+} // namespace async
 
 #elif defined(PLATFORM_POSIX)
 #include <chrono>
 #include <condition_variable>
 #include <mutex>
 
+namespace async {
 class Semaphore {
         std::mutex mutex;
         std::condition_variable cv;
@@ -58,7 +61,7 @@ class Semaphore {
                 return true;
         }
 };
-
+} // namespace async
 #else
 #error "No platform selected, define PLATFORM_FREERTOS or PLATFORM_POSIX"
 #endif

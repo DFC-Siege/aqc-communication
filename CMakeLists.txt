@@ -11,7 +11,9 @@ set(EXTRA_COMPONENT_DIRS
     components/hal/serial_hal
     components/hal/esp32/esp32_ble_hal
     components/hal/esp32/esp32_serial_hal
+    components/hal/esp32/esp32_http_client
     components/hal/esp32/store/nvs_store
+    components/hal/http_client
     components/transport
     components/transport/chunked_transport
     components/transport/chunked_transport/ble_transport

@@ -10,6 +10,8 @@
 #include "ble_hal.hpp"
 #include "communication_handler.hpp"
 #include "console_logger.hpp"
+#include "http_client.hpp"
+#include "i_http_client.hpp"
 #include "logger.hpp"
 #include "nvs_store.hpp"
 #include "result.hpp"

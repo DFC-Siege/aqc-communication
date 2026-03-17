@@ -55,7 +55,7 @@ struct ITransporter {
                                           ISender::CompleteCallback on_complete,
                                           ErrorCallback on_error) = 0;
 
-        virtual std::shared_ptr<Future<result::Result<bool>>>
+        virtual std::shared_ptr<async::Future<result::Result<bool>>>
         send_async(uint8_t command, std::span<const uint8_t> data) = 0;
 
         virtual result::Result<bool>
@@ -63,7 +63,8 @@ struct ITransporter {
                 IReceiver::CompleteCallback on_complete,
                 ErrorCallback on_error) = 0;
 
-        virtual std::shared_ptr<Future<result::Result<std::vector<uint8_t>>>>
+        virtual std::shared_ptr<
+            async::Future<result::Result<std::vector<uint8_t>>>>
         request_async(uint8_t command, std::span<const uint8_t> payload) = 0;
 
         virtual result::Result<FeedResult>

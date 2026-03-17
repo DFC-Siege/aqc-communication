@@ -1,8 +1,11 @@
 #pragma once
-#include "semaphore.hpp"
+
 #include <cstdint>
 #include <memory>
 
+#include "semaphore.hpp"
+
+namespace async {
 template <typename T> class Future {
         Semaphore sem;
         T value;
@@ -46,3 +49,4 @@ template <typename T> class Promise {
                 future->set_value(std::move(val));
         }
 };
+} // namespace async
