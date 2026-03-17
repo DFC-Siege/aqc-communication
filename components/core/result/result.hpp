@@ -1,9 +1,10 @@
 #pragma once
-
+#include <cassert>
 #include <optional>
 #include <string_view>
 
 namespace result {
+
 template <typename T> class Result {
       public:
         Result() : fail(true) {
@@ -12,10 +13,10 @@ template <typename T> class Result {
         Result(bool fail, std::string_view err, std::optional<T> val)
             : fail(fail), err(err), val(std::move(val)) {
         }
+
         bool failed() const {
                 return fail;
         }
-
         std::string_view error() const {
                 return err;
         }
@@ -31,16 +32,15 @@ template <typename T> class Result {
         std::optional<T> val;
 };
 
-template <typename T> class RefResult {
+template <typename T> class Result<T &> {
       public:
-        RefResult(bool fail, std::string_view err, T *val)
+        Result(bool fail, std::string_view err, T *val)
             : fail(fail), err(err), val(val) {
         }
 
         bool failed() const {
                 return fail;
         }
-
         std::string_view error() const {
                 return err;
         }
@@ -60,28 +60,28 @@ struct Error {
         std::string_view message;
 
         template <typename T> operator Result<T>() const {
-                return Result<T>{true, message, std::nullopt};
+                return {true, message, std::nullopt};
         }
 
-        template <typename T> operator RefResult<T>() const {
-                return RefResult<T>{true, message, nullptr};
+        template <typename T> operator Result<T &>() const {
+                return {true, message, nullptr};
         }
 };
 
 inline Error err(std::string_view message) {
-        return Error{message};
+        return {message};
 }
 
 inline Result<bool> ok() {
-        return Result<bool>{false, "", true};
+        return {false, "", true};
 }
 
 template <typename T> Result<T> ok(T value) {
-        return Result<T>{false, "", std::move(value)};
+        return {false, "", std::move(value)};
 }
 
-template <typename T> RefResult<T> ok_ref(T &value) {
-        return RefResult<T>{false, "", &value};
+template <typename T> Result<T &> ok_ref(T &value) {
+        return {false, "", &value};
 }
 
 } // namespace result
