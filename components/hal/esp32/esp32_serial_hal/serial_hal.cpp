@@ -5,7 +5,7 @@
 #include "result.hpp"
 #include "serial_hal.hpp"
 
-namespace Serial {
+namespace serial {
 SerialHal::SerialHal() {
         uart_config_t uart_config = {.baud_rate = BAUDRATE,
                                      .data_bits = UART_DATA_8_BITS,
@@ -57,4 +57,4 @@ result::Result<bool> SerialHal::loop() {
         }
         return result::ok();
 }
-} // namespace Serial
+} // namespace serial

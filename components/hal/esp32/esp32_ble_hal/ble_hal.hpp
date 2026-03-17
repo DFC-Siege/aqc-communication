@@ -9,7 +9,7 @@
 
 #include "i_ble_hal.hpp"
 
-namespace Ble {
+namespace ble {
 
 class BleHal : public IBleHal {
       public:
@@ -57,4 +57,4 @@ class BleHal : public IBleHal {
         void start_advertising();
 };
 
-} // namespace Ble
+} // namespace ble

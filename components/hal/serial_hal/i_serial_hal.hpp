@@ -5,7 +5,7 @@
 #include <functional>
 #include <span>
 
-namespace Serial {
+namespace serial {
 
 using ReceiveCallback = std::function<void(std::span<const uint8_t>)>;
 
@@ -20,4 +20,4 @@ class ISerialHal {
         ReceiveCallback receive_callback;
 };
 
-} // namespace Serial
+} // namespace serial

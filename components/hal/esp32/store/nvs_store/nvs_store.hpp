@@ -7,7 +7,7 @@
 #include "result.hpp"
 
 namespace store {
-namespace KV {
+namespace kv {
 class NvsStore : public IStore {
       public:
         static result::Result<NvsStore> init(std::string_view ns);
@@ -29,5 +29,5 @@ class NvsStore : public IStore {
         result::Result<bool> try_open();
         static result::Result<bool> try_init(int count = 0);
 };
-} // namespace KV
+} // namespace kv
 } // namespace store

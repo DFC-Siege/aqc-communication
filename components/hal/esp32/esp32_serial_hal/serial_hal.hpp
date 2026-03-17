@@ -8,7 +8,7 @@
 #include "i_serial_hal.hpp"
 #include "result.hpp"
 
-namespace Serial {
+namespace serial {
 class SerialHal : public ISerialHal {
       public:
         SerialHal();
@@ -23,4 +23,4 @@ class SerialHal : public ISerialHal {
         static constexpr auto BUF_SIZE = 1024;
         ReceiveCallback receive_callback;
 };
-} // namespace Serial
+} // namespace serial

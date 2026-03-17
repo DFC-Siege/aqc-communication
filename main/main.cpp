@@ -20,7 +20,7 @@ void app_main(void) {
         logging::Logger::set(std::make_unique<logging::ConsoleLogger>());
 
         static constexpr auto DEFAULT_NAMESPACE = "default";
-        auto store = store::KV::NvsStore::init(DEFAULT_NAMESPACE);
+        auto store = store::kv::NvsStore::init(DEFAULT_NAMESPACE);
 
         esp_err_t ret = nvs_flash_init();
         if (ret == ESP_ERR_NVS_NO_FREE_PAGES ||
@@ -29,14 +29,14 @@ void app_main(void) {
                 nvs_flash_init();
         }
 
-        auto &ble = Ble::BleHal::instance();
+        auto &ble = ble::BleHal::instance();
         ble.on_connection_changed([](bool connected) {
                 logging::logger().println_fmt(
                     "Ble {}", connected ? "connected" : "disconnected");
         });
         ble.begin("aqc");
 
-        Serial::SerialHal serial_hal;
+        serial::SerialHal serial_hal;
         serial_hal.on_receive([](std::span<const uint8_t> data) {
                 logging::logger().println(
                     "serial", std::string_view(

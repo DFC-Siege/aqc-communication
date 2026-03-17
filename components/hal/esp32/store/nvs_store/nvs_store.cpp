@@ -6,7 +6,7 @@
 #include "result.hpp"
 
 namespace store {
-namespace KV {
+namespace kv {
 bool NvsStore::has_initialized = false;
 
 void NvsStore::assert_initialized() {
@@ -170,5 +170,5 @@ result::Result<std::string> NvsStore::get(std::string_view key) {
 
         return result::ok(str);
 }
-} // namespace KV
+} // namespace kv
 } // namespace store

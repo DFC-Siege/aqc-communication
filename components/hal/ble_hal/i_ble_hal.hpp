@@ -6,7 +6,7 @@
 
 #include "result.hpp"
 
-namespace Ble {
+namespace ble {
 
 using ReceiveCallback = std::function<void(std::span<const uint8_t>)>;
 using ConnectionCallback = std::function<void(bool connected)>;
@@ -24,4 +24,4 @@ class IBleHal {
         ConnectionCallback connection_callback;
 };
 
-} // namespace Ble
+} // namespace ble

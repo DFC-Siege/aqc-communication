@@ -11,13 +11,13 @@
 namespace transport {
 class SerialTransporter : public ChunkedTransporter {
       public:
-        SerialTransporter(uint16_t mtu, Serial::ISerialHal &serial_hal);
+        SerialTransporter(uint16_t mtu, serial::ISerialHal &serial_hal);
 
         result::Result<bool>
         concrete_send(std::span<const uint8_t> data) override;
 
       private:
         static constexpr auto TAG = "SerialTransporter";
-        Serial::ISerialHal &serial_hal;
+        serial::ISerialHal &serial_hal;
 };
 } // namespace transport

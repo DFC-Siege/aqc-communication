@@ -6,7 +6,7 @@
 #include "result.hpp"
 
 namespace store {
-namespace KV {
+namespace kv {
 class IStore {
       public:
         virtual ~IStore() = default;
@@ -14,5 +14,5 @@ class IStore {
                                            std::string_view value) = 0;
         virtual result::Result<std::string> get(std::string_view key) = 0;
 };
-} // namespace KV
+} // namespace kv
 } // namespace store

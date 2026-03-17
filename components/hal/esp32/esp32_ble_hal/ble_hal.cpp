@@ -11,7 +11,7 @@
 
 #include "ble_hal.hpp"
 
-namespace Ble {
+namespace ble {
 
 static constexpr char TAG[] = "BleHal";
 
@@ -146,4 +146,4 @@ int BleHal::on_gatt_access(uint16_t, uint16_t, ble_gatt_access_ctxt *ctxt,
         return 0;
 }
 
-} // namespace Ble
+} // namespace ble

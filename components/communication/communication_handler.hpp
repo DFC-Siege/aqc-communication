@@ -13,8 +13,8 @@ class CommunicationHandler {
         transport::BleTransporter ble_transporter;
         transport::SerialTransporter serial_transporter;
 
-        CommunicationHandler(Ble::IBleHal &ble_hal,
-                             Serial::ISerialHal &serial_hal);
+        CommunicationHandler(ble::IBleHal &ble_hal,
+                             serial::ISerialHal &serial_hal);
 
       private:
         static constexpr auto BLE_MTU = 512;

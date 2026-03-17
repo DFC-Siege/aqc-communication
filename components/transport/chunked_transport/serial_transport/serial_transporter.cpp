@@ -8,7 +8,7 @@
 
 namespace transport {
 SerialTransporter::SerialTransporter(uint16_t mtu,
-                                     Serial::ISerialHal &serial_hal)
+                                     serial::ISerialHal &serial_hal)
     : ChunkedTransporter(mtu), serial_hal(serial_hal) {
         serial_hal.on_receive([this](std::span<const uint8_t> data) {
                 const auto result = feed(data);

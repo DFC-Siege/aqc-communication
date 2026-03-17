@@ -11,13 +11,13 @@
 namespace transport {
 class BleTransporter : public ChunkedTransporter {
       public:
-        BleTransporter(uint16_t mtu, Ble::IBleHal &ble_hal);
+        BleTransporter(uint16_t mtu, ble::IBleHal &ble_hal);
 
         result::Result<bool>
         concrete_send(std::span<const uint8_t> data) override;
 
       private:
         static constexpr auto TAG = "BleTransporter";
-        Ble::IBleHal &ble_hal;
+        ble::IBleHal &ble_hal;
 };
 } // namespace transport
