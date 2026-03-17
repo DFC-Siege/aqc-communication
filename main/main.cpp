@@ -44,7 +44,7 @@ void app_main(void) {
                                   data.size()));
         });
 
-        Communication::CommunicationHandler communication_handler(ble,
+        communication::CommunicationHandler communication_handler(ble,
                                                                   serial_hal);
 
         uint32_t counter = 0;

@@ -7,7 +7,7 @@
 #include "i_serial_hal.hpp"
 #include "serial_transporter.hpp"
 
-namespace Communication {
+namespace communication {
 class CommunicationHandler {
       public:
         transport::BleTransporter ble_transporter;
@@ -20,4 +20,4 @@ class CommunicationHandler {
         static constexpr auto BLE_MTU = 512;
         static constexpr auto SERIAL_MTU = 512;
 };
-} // namespace Communication
+} // namespace communication
