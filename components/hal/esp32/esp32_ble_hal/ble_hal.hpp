@@ -51,6 +51,8 @@ class BleHal : public IBleHal {
             BLE_UUID128_INIT(0x6e, 0x40, 0x00, 0x03, 0xb5, 0xa3, 0xf3, 0x93,
                              0xe0, 0xa9, 0xe5, 0x0e, 0x24, 0xdc, 0xca, 0x9e);
         static const ble_gatt_svc_def gatt_services[];
+        ReceiveCallback receive_callback;
+        ConnectionCallback connection_callback;
 
         BleHal() = default;
 
