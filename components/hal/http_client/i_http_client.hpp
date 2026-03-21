@@ -5,7 +5,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include "future.hpp"
 #include "result.hpp"
 
 using Headers = std::unordered_map<std::string_view, std::string_view>;

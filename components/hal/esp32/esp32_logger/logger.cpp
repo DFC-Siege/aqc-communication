@@ -2,12 +2,12 @@
 #include <esp_system.h>
 
 #include "i_logger.hpp"
-#include "idf_logger.hpp"
+#include "logger.hpp"
 
 namespace logging {
 
-void IdfLogger::print(LogLevel level, std::string_view tag,
-                      std::string_view value) {
+void Logger::print(LogLevel level, std::string_view tag,
+                   std::string_view value) {
         switch (level) {
         case LogLevel::Verbose:
                 ESP_LOGV(tag.data(), "%.*s", (int)value.size(), value.data());
@@ -33,8 +33,8 @@ void IdfLogger::print(LogLevel level, std::string_view tag,
         }
 }
 
-void IdfLogger::println(LogLevel level, std::string_view tag,
-                        std::string_view value) {
+void Logger::println(LogLevel level, std::string_view tag,
+                     std::string_view value) {
         print(level, tag, value);
 }
 } // namespace logging

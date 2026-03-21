@@ -4,5 +4,5 @@ idf_component_register(
         "chunked_sender.cpp"
         "chunked_transporter.cpp"
     INCLUDE_DIRS "."
-    REQUIRES result logger transport
+    REQUIRES result logger transport platform_async core_async
 )

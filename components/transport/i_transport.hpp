@@ -1,17 +1,13 @@
 #pragma once
 
 #include <cstdint>
-#include <esp_crc.h>
 #include <functional>
-#include <future>
 #include <memory>
-#include <set>
 #include <span>
 #include <string_view>
-#include <unordered_map>
 #include <vector>
 
-#include "future.hpp"
+#include "i_future.hpp"
 #include "result.hpp"
 
 namespace transport {
@@ -20,7 +16,6 @@ using SendCallback =
 
 struct ISender {
         using CompleteCallback = std::function<void()>;
-
         virtual ~ISender() = default;
         virtual result::Result<bool> send(uint8_t session_id, uint8_t command,
                                           std::span<const uint8_t> data,
@@ -32,7 +27,6 @@ struct ISender {
 struct IReceiver {
         using CompleteCallback =
             std::function<void(std::vector<uint8_t> result)>;
-
         virtual ~IReceiver() = default;
         virtual result::Result<bool> start(uint8_t session_id, uint8_t command,
                                            std::span<const uint8_t> payload,
@@ -48,25 +42,20 @@ struct FeedResult {
 
 struct ITransporter {
         using ErrorCallback = std::function<void(std::string_view error)>;
-
         virtual ~ITransporter() = default;
         virtual result::Result<bool> send(uint8_t command,
                                           std::span<const uint8_t> data,
                                           ISender::CompleteCallback on_complete,
                                           ErrorCallback on_error) = 0;
-
-        virtual std::shared_ptr<async::Future<result::Result<bool>>>
+        virtual std::shared_ptr<async::IFuture<result::Result<bool>>>
         send_async(uint8_t command, std::span<const uint8_t> data) = 0;
-
         virtual result::Result<bool>
         request(uint8_t command, std::span<const uint8_t> payload,
                 IReceiver::CompleteCallback on_complete,
                 ErrorCallback on_error) = 0;
-
         virtual std::shared_ptr<
-            async::Future<result::Result<std::vector<uint8_t>>>>
+            async::IFuture<result::Result<std::vector<uint8_t>>>>
         request_async(uint8_t command, std::span<const uint8_t> payload) = 0;
-
         virtual result::Result<FeedResult>
         feed(std::span<const uint8_t> raw) = 0;
 };

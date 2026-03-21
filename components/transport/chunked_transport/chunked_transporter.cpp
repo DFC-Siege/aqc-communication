@@ -6,6 +6,7 @@
 #include "chunked_transporter.hpp"
 #include "i_transport.hpp"
 #include "packet.hpp"
+#include "promise.hpp"
 #include "result.hpp"
 
 namespace transport {
@@ -78,7 +79,7 @@ ChunkedTransporter::send(uint8_t command, std::span<const uint8_t> data,
         return result::ok();
 }
 
-std::shared_ptr<async::Future<result::Result<bool>>>
+std::shared_ptr<async::IFuture<result::Result<bool>>>
 ChunkedTransporter::send_async(uint8_t command, std::span<const uint8_t> data) {
         auto promise = std::make_shared<async::Promise<result::Result<bool>>>();
         auto future = promise->get_future();
@@ -121,7 +122,7 @@ ChunkedTransporter::request(uint8_t command, std::span<const uint8_t> payload,
         return result::ok();
 }
 
-std::shared_ptr<async::Future<result::Result<std::vector<uint8_t>>>>
+std::shared_ptr<async::IFuture<result::Result<std::vector<uint8_t>>>>
 ChunkedTransporter::request_async(uint8_t command,
                                   std::span<const uint8_t> payload) {
         auto promise = std::make_shared<

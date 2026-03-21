@@ -2,7 +2,6 @@
 #include <cstdio>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
-#include <future>
 #include <memory>
 #include <nvs_flash.h>
 #include <string_view>

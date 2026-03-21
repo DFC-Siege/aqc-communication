@@ -1,9 +1,10 @@
 #pragma once
 
 #include <cstdint>
+#include <set>
 #include <span>
 
-#include "future.hpp"
+#include "i_future.hpp"
 #include "i_transport.hpp"
 #include "result.hpp"
 
@@ -19,7 +20,7 @@ class ChunkedTransporter : public ITransporter {
              ISender::CompleteCallback on_complete,
              ITransporter::ErrorCallback on_error) override;
 
-        std::shared_ptr<async::Future<result::Result<bool>>>
+        std::shared_ptr<async::IFuture<result::Result<bool>>>
         send_async(uint8_t command, std::span<const uint8_t> data) override;
 
         result::Result<bool> request(uint8_t command,
@@ -27,7 +28,7 @@ class ChunkedTransporter : public ITransporter {
                                      IReceiver::CompleteCallback on_complete,
                                      ErrorCallback on_error) override;
 
-        std::shared_ptr<async::Future<result::Result<std::vector<uint8_t>>>>
+        std::shared_ptr<async::IFuture<result::Result<std::vector<uint8_t>>>>
         request_async(uint8_t command,
                       std::span<const uint8_t> payload) override;
 
