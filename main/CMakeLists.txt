@@ -7,7 +7,6 @@ if(ESP_PLATFORM)
 else()
     add_executable(communication main_posix.cpp)
     target_link_libraries(communication PRIVATE
-        communication_handler
         logger
         console_logger
         result
