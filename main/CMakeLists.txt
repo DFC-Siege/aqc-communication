@@ -11,6 +11,7 @@ else()
         console_logger
         result
         platform_async
+        posix_serial_hal
     )
     target_compile_features(communication PRIVATE cxx_std_23)
 endif()

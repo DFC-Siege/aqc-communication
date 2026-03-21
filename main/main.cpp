@@ -45,62 +45,9 @@ void app_main(void) {
                                   data.size()));
         });
 
-        communication::CommunicationHandler communication_handler(ble,
-                                                                  serial_hal);
-
         uint32_t counter = 0;
         TickType_t last_wake_time = xTaskGetTickCount();
         const TickType_t interval = pdMS_TO_TICKS(1000);
-
-        const auto command = 0x01;
-        const auto data = std::span<const uint8_t>{};
-
-        const auto request_result =
-            communication_handler.ble_transporter.request(
-                command, data,
-                [](const auto response) {
-                        logging::logger().println("request complete");
-                },
-                [](const auto error) {
-                        logging::logger().println_fmt(logging::LogLevel::Error,
-                                                      "request error: {}",
-                                                      error);
-                });
-        if (request_result.failed()) {
-                logging::logger().println_fmt(logging::LogLevel::Error,
-                                              "request error: {}",
-                                              request_result.error());
-        }
-
-        const auto async_request_result =
-            communication_handler.ble_transporter.request_async(command, data)
-                ->get();
-        if (async_request_result.failed()) {
-                logging::logger().println_fmt(logging::LogLevel::Error,
-                                              "request error: {}",
-                                              async_request_result.error());
-        }
-
-        const auto send_result = communication_handler.ble_transporter.send(
-            command, data, []() { logging::logger().println("send complete"); },
-            [](const auto error) {
-                    logging::logger().println_fmt(logging::LogLevel::Error,
-                                                  "send error: {}", error);
-            });
-        if (send_result.failed()) {
-                logging::logger().println_fmt(logging::LogLevel::Error,
-                                              "send error: {}",
-                                              send_result.error());
-        }
-
-        const auto async_send_result =
-            communication_handler.ble_transporter.send_async(command, data)
-                ->get();
-        if (async_send_result.failed()) {
-                logging::logger().println_fmt(logging::LogLevel::Error,
-                                              "request error: {}",
-                                              async_send_result.error());
-        }
 
         while (true) {
                 serial_hal.loop();
@@ -114,24 +61,6 @@ void app_main(void) {
                         const auto span = std::span<const uint8_t>(
                             reinterpret_cast<const uint8_t *>(str.data()),
                             str.size());
-
-                        const auto send_result =
-                            communication_handler.ble_transporter.send(
-                                0x01, span,
-                                []() {
-                                        logging::logger().println(
-                                            "send complete");
-                                },
-                                [](std::string_view error) {
-                                        logging::logger().println_fmt(
-                                            logging::LogLevel::Error,
-                                            "send error: {}", error);
-                                });
-                        if (send_result.failed()) {
-                                logging::logger().println_fmt(
-                                    logging::LogLevel::Error, "send error: {}",
-                                    send_result.error());
-                        }
                 }
 
                 vTaskDelay(1);
