@@ -19,5 +19,6 @@ class CommunicationHandler {
       private:
         static constexpr auto BLE_MTU = 512;
         static constexpr auto SERIAL_MTU = 512;
+        static constexpr auto MAX_ATTEMPTS = 3;
 };
 } // namespace communication
