@@ -1,3 +1,4 @@
+if(ESP_PLATFORM)
 idf_component_register(
     SRCS
         "chunked_receiver.cpp"
@@ -6,3 +7,6 @@ idf_component_register(
     INCLUDE_DIRS "."
     REQUIRES result logger transport platform_async core_async
 )
+else()
+
+endif()

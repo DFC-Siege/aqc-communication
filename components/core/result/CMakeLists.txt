@@ -1,3 +1,7 @@
+if(ESP_PLATFORM)
 idf_component_register(
         INCLUDE_DIRS "."
 )
+else()
+
+endif()
