@@ -1,3 +1,0 @@
-add_library(posix_async INTERFACE)
-target_include_directories(posix_async INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
-target_compile_features(posix_async INTERFACE cxx_std_23)

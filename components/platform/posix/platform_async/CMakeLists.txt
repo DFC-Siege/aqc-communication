@@ -1,3 +1,0 @@
-add_library(platform_async INTERFACE)
-target_include_directories(platform_async INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(platform_async INTERFACE core_async posix_async)
