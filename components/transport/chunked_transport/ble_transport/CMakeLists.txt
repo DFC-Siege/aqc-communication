@@ -7,6 +7,5 @@ idf_component_register(
 else()
     add_library(ble_transport ble_transporter.cpp)
     target_include_directories(ble_transport PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-    target_link_libraries(ble_transport PUBLIC ble_transport)
     target_compile_features(ble_transport PUBLIC cxx_std_23)
 endif()

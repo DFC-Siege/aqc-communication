@@ -1,5 +1,4 @@
 #include <cstdint>
-#include <esp_crc.h>
 #include <vector>
 
 #include "chunked_receiver.hpp"
@@ -26,7 +25,7 @@ ChunkedReceiver::start(uint8_t session_id, uint8_t command,
         current_attempt = 0;
         received_chunks.clear();
 
-        const auto checksum = esp_crc16_le(0, payload.data(), payload.size());
+        const auto checksum = crc16(payload);
         const auto chunk =
             Chunk{std::vector<uint8_t>{payload.begin(), payload.end()},
                   0,

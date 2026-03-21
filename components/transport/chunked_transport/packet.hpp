@@ -1,9 +1,10 @@
 #pragma once
 
-#include "result.hpp"
 #include <cstdint>
 #include <span>
 #include <vector>
+
+#include "result.hpp"
 
 namespace transport {
 static uint16_t crc16(std::span<const uint8_t> data) {

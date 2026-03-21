@@ -1,5 +1,7 @@
-#include "logger.hpp"
+#include <cassert>
+
 #include "i_logger.hpp"
+#include "logger.hpp"
 
 namespace logging {
 std::unique_ptr<ILogger> Logger::logger = std::make_unique<NullLogger>();

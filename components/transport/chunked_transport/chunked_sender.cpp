@@ -1,5 +1,4 @@
 #include <cstdint>
-#include <esp_crc.h>
 #include <string_view>
 
 #include "chunked_sender.hpp"
@@ -90,16 +89,14 @@ ChunkedSender::create_chunks(std::span<const uint8_t> data) const {
                     std::min<size_t>(payload_size, data.size() - offset);
                 auto payload = std::vector<uint8_t>(
                     data.begin() + offset, data.begin() + offset + size);
-                const auto checksum =
-                    esp_crc16_le(0, payload.data(), payload.size());
+                const auto checksum = crc16(data);
                 chunks.emplace_back(std::move(payload), i, total_chunks,
                                     checksum, session_id, command);
         }
 
         if (chunks.empty()) {
                 const auto payload = std::vector<uint8_t>();
-                const auto checksum =
-                    esp_crc16_le(0, payload.data(), payload.size());
+                const auto checksum = crc16(data);
                 chunks.emplace_back(std::move(payload), 0, 1, checksum,
                                     session_id, command);
         }
