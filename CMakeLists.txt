@@ -7,8 +7,8 @@ if(ESP_PLATFORM)
         ${PONS_DIR}/core/result
         ${PONS_DIR}/core/logger
         ${PONS_DIR}/core/logger/console_logger
-        ${PONS_DIR}/core/store
         ${PONS_DIR}/hal/esp32/esp32_async
+        ${PONS_DIR}/hal/store
         ${PONS_DIR}/hal/esp32/esp32_store/nvs_store
         ${PONS_DIR}/hal/esp32/esp32_ble_hal
         ${PONS_DIR}/hal/esp32/esp32_serial_hal
