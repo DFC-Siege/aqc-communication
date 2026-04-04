@@ -6,8 +6,9 @@ BUILD_DIR ?= build-$(PLATFORM)
 all: build
 
 posix:
-	cmake -B build-posix -DPLATFORM=posix -G Ninja
+	cmake -B build-posix -DPLATFORM=posix -G Ninja -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 	cmake --build build-posix
+	ln -sf build-posix/compile_commands.json compile_commands.json
 
 esp32:
 	idf.py build

@@ -1,3 +1,4 @@
 .cache/clangd/index
 build
 /build-posix
+/compile_commands.json

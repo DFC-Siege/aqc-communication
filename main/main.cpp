@@ -5,6 +5,7 @@
 #include <memory>
 #include <nvs_flash.h>
 #include <string_view>
+#include <thread>
 
 #include "ble_hal.hpp"
 #include "communication_handler.hpp"
@@ -15,6 +16,7 @@
 #include "nvs_store.hpp"
 #include "result.hpp"
 #include "serial_hal.hpp"
+#include "serial_transporter.hpp"
 
 extern "C" {
 void app_main(void) {
@@ -38,6 +40,7 @@ void app_main(void) {
         ble.begin("aqc");
 
         serial::SerialHal serial_hal;
+        transport::SerialTransporter serial_transporter(32, 3, serial_hal);
         serial_hal.on_receive([](std::span<const uint8_t> data) {
                 logging::logger().println(
                     "serial", std::string_view(
@@ -45,22 +48,22 @@ void app_main(void) {
                                   data.size()));
         });
 
-        uint32_t counter = 0;
-        TickType_t last_wake_time = xTaskGetTickCount();
-        const TickType_t interval = pdMS_TO_TICKS(1000);
+        std::thread([&] {
+                while (true) {
+                        serial_hal.loop();
+                        vTaskDelay(1);
+                }
+        }).detach();
 
         while (true) {
-                serial_hal.loop();
-
-                TickType_t current_time = xTaskGetTickCount();
-                if (current_time - last_wake_time >= interval) {
-                        last_wake_time = current_time;
-                        const auto str = std::to_string(counter++);
-                        logging::logger().println_fmt("count: {}", str);
-
-                        const auto span = std::span<const uint8_t>(
-                            reinterpret_cast<const uint8_t *>(str.data()),
-                            str.size());
+                const auto result =
+                    serial_transporter
+                        .request_async(0x0, std::vector<uint8_t>())
+                        ->get();
+                if (result.failed()) {
+                        logging::logger().print_fmt("error: {}",
+                                                    result.error());
+                        continue;
                 }
 
                 vTaskDelay(1);

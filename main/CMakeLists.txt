@@ -12,6 +12,10 @@ else()
         result
         platform_async
         posix_serial_hal
+        dispatcher
+        serial_transporter
+        chunked_transporter
+        transporter
     )
     target_compile_features(communication PRIVATE cxx_std_23)
 endif()
