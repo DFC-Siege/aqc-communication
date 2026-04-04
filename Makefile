@@ -10,6 +10,9 @@ posix:
 	cmake --build build-posix
 	ln -sf build-posix/compile_commands.json compile_commands.json
 
+run:
+	./build-posix/main/communication $(DEVICE)
+
 esp32:
 	idf.py build
 

@@ -9,16 +9,28 @@
 #include "chunked_transporter.hpp"
 #include "console_logger.hpp"
 #include "dispatcher.hpp"
+#include "i_logger.hpp"
 #include "logger.hpp"
 #include "multiplexer.hpp"
 #include "result.hpp"
 #include "serial_hal.hpp"
 #include "serial_transporter.hpp"
 
-int main() {
+static constexpr auto TAG = "main";
+
+enum Command : transport::CommandId {
+        Ping,
+};
+
+int main(int argc, char *argv[]) {
         logging::Logger::set(std::make_unique<logging::ConsoleLogger>());
-        static constexpr auto DEVICE = "/dev/ttyACM0";
-        static constexpr uint16_t MTU = 255;
+        if (argc < 2) {
+                logging::logger().println(logging::LogLevel::Error, TAG,
+                                          "usage: communication <device>");
+                return 1;
+        }
+        const auto DEVICE = argv[1];
+        static constexpr uint16_t MTU = 16;
         static constexpr uint16_t MAX_TRIES = 1;
 
         serial::SerialHal serial_hal(DEVICE);
@@ -36,6 +48,24 @@ int main() {
             serial_base, std::move(transporters));
         auto channel = multiplexer.get_channel(0x00).value();
         transport::Dispatcher dispatcher(channel);
+        static constexpr std::string_view msg =
+            "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do "
+            "eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut "
+            "enim ad minim veniam, quis nostrud exercitation ullamco laboris "
+            "nisi ut aliquip ex ea commodo consequat.";
+        dispatcher.send(Command::Ping, transport::Data(msg.begin(), msg.end()));
+        dispatcher.register_handler(
+            Command::Ping, [](result::Result<transport::Data> result) {
+                    if (result.failed()) {
+                            logging::logger().println(logging::LogLevel::Error,
+                                                      TAG, result.error());
+                            return;
+                    }
+                    const auto data = std::move(result).value();
+                    const auto str = std::string(data.begin(), data.end());
+                    logging::logger().println(logging::LogLevel::Info, TAG,
+                                              str);
+            });
 
         while (true) {
                 serial_hal.loop();
