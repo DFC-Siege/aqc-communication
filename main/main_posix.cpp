@@ -6,6 +6,7 @@
 #include <thread>
 #include <unordered_map>
 
+#include "base_transporter.hpp"
 #include "chunked_transporter.hpp"
 #include "console_logger.hpp"
 #include "dispatcher.hpp"
@@ -18,42 +19,47 @@
 
 static constexpr auto TAG = "main";
 
+enum Channel : transport::TransporterId {
+        Chunked,
+        Direct,
+};
+
 enum Command : transport::CommandId {
         Ping,
 };
 
 int main(int argc, char *argv[]) {
-        logging::Logger::set(std::make_unique<logging::ConsoleLogger>());
+        auto logger = std::make_unique<logging::ConsoleLogger>();
+        logger->set_level(logging::LogLevel::Debug);
+        logging::Logger::set(std::move(logger));
+
         if (argc < 2) {
                 logging::logger().println(logging::LogLevel::Error, TAG,
                                           "usage: communication <device>");
                 return 1;
         }
+
         const auto DEVICE = argv[1];
-        static constexpr uint16_t MTU = 16;
+        static constexpr uint16_t MTU = 24;
         static constexpr uint16_t MAX_TRIES = 1;
 
         serial::SerialHal serial_hal(DEVICE);
-        transport::SerialTransporter serial_base(serial_hal, MTU);
+        transport::SerialTransporter serial_transporter(serial_hal, MTU);
+        transport::Multiplexer<transport::SerialTransporter,
+                               transport::BaseTransporter>
+            multiplexer(serial_transporter);
+        auto chunked_channel = multiplexer.create_channel(Channel::Chunked);
+        transport::ChunkedTransporter chunked_transporter(chunked_channel,
+                                                          MAX_TRIES);
 
-        using SerialChunked =
-            transport::ChunkedTransporter<transport::SerialTransporter>;
-        SerialChunked chunked_serial(serial_base, MAX_TRIES);
+        transport::Dispatcher dispatcher(chunked_channel);
 
-        std::unordered_map<transport::TransporterId,
-                           std::reference_wrapper<transport::BaseTransporter>>
-            transporters{{0x00, chunked_serial}};
-
-        transport::Multiplexer<transport::SerialTransporter> multiplexer(
-            serial_base, std::move(transporters));
-        auto channel = multiplexer.get_channel(0x00).value();
-        transport::Dispatcher dispatcher(channel);
         static constexpr std::string_view msg =
             "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do "
             "eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut "
             "enim ad minim veniam, quis nostrud exercitation ullamco laboris "
             "nisi ut aliquip ex ea commodo consequat.";
-        dispatcher.send(Command::Ping, transport::Data(msg.begin(), msg.end()));
+
         dispatcher.register_handler(
             Command::Ping, [](result::Result<transport::Data> result) {
                     if (result.failed()) {
@@ -62,10 +68,17 @@ int main(int argc, char *argv[]) {
                             return;
                     }
                     const auto data = std::move(result).value();
-                    const auto str = std::string(data.begin(), data.end());
-                    logging::logger().println(logging::LogLevel::Info, TAG,
-                                              str);
+                    logging::logger().println(
+                        logging::LogLevel::Info, TAG,
+                        std::string(data.begin(), data.end()));
             });
+
+        const auto send_result = dispatcher.send(
+            Command::Ping, transport::Data(msg.begin(), msg.end()));
+        if (send_result.failed()) {
+                logging::logger().println(logging::LogLevel::Error, TAG,
+                                          send_result.error());
+        }
 
         while (true) {
                 serial_hal.loop();
