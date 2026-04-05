@@ -57,16 +57,14 @@ int main(int argc, char *argv[]) {
             multiplexer.create_inner_channel(Channel::Chunked);
         auto chunked = std::make_unique<ChunkedMuxChannel>(
             inner_chunked_channel, MAX_TRIES);
-        auto &chunked_channel =
-            multiplexer.register_channel(Channel::Chunked, std::move(chunked));
 
         auto &inner_direct_channel =
             multiplexer.create_inner_channel(Channel::Direct);
         auto direct = std::make_unique<DirectMuxChannel>(inner_direct_channel);
-        auto &direct_channel =
-            multiplexer.register_channel(Channel::Direct, std::move(direct));
 
-        transport::Dispatcher dispatcher(direct_channel);
+        transport::Dispatcher<transport::BaseTransporter> dispatcher;
+        dispatcher.register_transporter(Channel::Chunked, std::move(chunked));
+        dispatcher.register_transporter(Channel::Direct, std::move(direct));
 
         dispatcher.register_handler(
             Command::Ping, [](result::Result<transport::Data> result) {
@@ -86,8 +84,9 @@ int main(int argc, char *argv[]) {
             "eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut "
             "enim ad minim veniam, quis nostrud exercitation ullamco laboris "
             "nisi ut aliquip ex ea commodo consequat.";
-        const auto send_result = dispatcher.send(
-            Command::Ping, transport::Data(msg.begin(), msg.end()));
+        const auto send_result =
+            dispatcher.send(Channel::Direct, Command::Ping,
+                            transport::Data(msg.begin(), msg.end()));
         if (send_result.failed()) {
                 logging::logger().println(logging::LogLevel::Error, TAG,
                                           send_result.error());
