@@ -13,6 +13,7 @@ if(ESP_PLATFORM)
                 direct_transporter
                 chunked_transporter
                 transporter
+                esp_driver_uart
     )
 else()
     add_executable(communication main_posix.cpp)

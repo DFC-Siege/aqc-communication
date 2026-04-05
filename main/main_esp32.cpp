@@ -7,6 +7,7 @@
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
+#include <hal/uart_types.h>
 
 #include "base_transporter.hpp"
 #include "chunked_transporter.hpp"
@@ -39,7 +40,12 @@ extern "C" void app_main() {
         static constexpr uint16_t MTU = 255;
         static constexpr uint16_t MAX_TRIES = 1;
 
-        serial::SerialHal serial_hal;
+        static constexpr auto BAUDRATE = 115200;
+        static constexpr auto BUFFER_SIZE = 1024;
+        static constexpr auto UART = UART_NUM_1;
+        static constexpr auto TX_PIN = 7;
+        static constexpr auto RX_PIN = 6;
+        serial::SerialHal serial_hal(UART, RX_PIN, TX_PIN, BAUDRATE, BUFFER_SIZE);
         transport::SerialTransporter serial_transporter(serial_hal, MTU);
         transport::Multiplexer multiplexer(serial_transporter);
 
