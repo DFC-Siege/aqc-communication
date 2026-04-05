@@ -5,10 +5,10 @@
 #include <string_view>
 #include <unordered_map>
 
+#include <esp_task_wdt.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <hal/uart_types.h>
-#include <esp_task_wdt.h>
 
 #include "base_transporter.hpp"
 #include "chunked_transporter.hpp"
@@ -52,10 +52,10 @@ struct SCDData {
         static result::Result<SCDData> deserialize(serializer::DataView buf) {
                 serializer::Reader r{buf};
                 return result::ok(SCDData{
-                        .co2 = TRY(r.read<uint16_t>()),
-                        .temperature = TRY(r.read<float>()),
-                        .humidity = TRY(r.read<float>()),
-                        .error = TRY(r.read_string()),
+                    .co2 = TRY(r.read<uint16_t>()),
+                    .temperature = TRY(r.read<float>()),
+                    .humidity = TRY(r.read<float>()),
+                    .error = TRY(r.read_string()),
                 });
         }
 };
@@ -65,7 +65,7 @@ extern "C" void app_main() {
         logger->set_level(logging::LogLevel::Info);
         logging::Logger::set(std::move(logger));
 
-        static constexpr uint16_t MTU = 255;
+        static constexpr uint16_t MTU = 17;
         static constexpr uint16_t MAX_TRIES = 1;
 
         static constexpr auto BAUDRATE = 115200;
@@ -73,22 +73,23 @@ extern "C" void app_main() {
         static constexpr auto UART = UART_NUM_1;
         static constexpr auto TX_PIN = 7;
         static constexpr auto RX_PIN = 6;
-        serial::SerialHal serial_hal(UART, RX_PIN, TX_PIN, BAUDRATE, BUFFER_SIZE);
+        serial::SerialHal serial_hal(UART, TX_PIN, RX_PIN, BAUDRATE,
+                                     BUFFER_SIZE);
         transport::SerialTransporter serial_transporter(serial_hal, MTU);
         transport::Multiplexer multiplexer(serial_transporter);
 
         using MuxChannel =
-        transport::Multiplexer<transport::SerialTransporter>::InnerChannel;
+            transport::Multiplexer<transport::SerialTransporter>::InnerChannel;
         using ChunkedMuxChannel = transport::ChunkedTransporter<MuxChannel>;
         using DirectMuxChannel = transport::DirectTransporter<MuxChannel>;
 
         auto &inner_chunked_channel =
-                multiplexer.create_inner_channel(Channel::Chunked);
+            multiplexer.create_inner_channel(Channel::Chunked);
         auto chunked = std::make_unique<ChunkedMuxChannel>(
-                inner_chunked_channel, MAX_TRIES);
+            inner_chunked_channel, MAX_TRIES);
 
         auto &inner_direct_channel =
-                multiplexer.create_inner_channel(Channel::Direct);
+            multiplexer.create_inner_channel(Channel::Direct);
         auto direct = std::make_unique<DirectMuxChannel>(inner_direct_channel);
 
         transport::Dispatcher<transport::BaseTransporter> dispatcher;
@@ -96,31 +97,36 @@ extern "C" void app_main() {
         dispatcher.register_transporter(Channel::Direct, std::move(direct));
 
         dispatcher.register_handler(
-                Command::SCD, [](result::Result<transport::Data> result) {
-                        if (result.failed()) {
-                                logging::logger().println(logging::LogLevel::Error,
-                                                          TAG, result.error());
-                                return;
-                        }
-                        auto buffer = result.value();
-                        const auto deserialize_result = SCDData::deserialize(buffer);
-                        if (deserialize_result.failed()) {
-                                logging::logger().println(logging::LogLevel::Error,
-                                                          TAG, deserialize_result.error());
-                                return;
-                        }
-                        const auto &data = deserialize_result.value();
-                        logging::logger().println_fmt(logging::LogLevel::Info, TAG,
-                                                      "SCD co2: {} temp: {:.2f} humidity: {:.2f} error: {}",
-                                                      data.co2, data.temperature, data.humidity, data.error);
-                });
+            Command::SCD, [](result::Result<transport::Data> result) {
+                    if (result.failed()) {
+                            logging::logger().println(logging::LogLevel::Error,
+                                                      TAG, result.error());
+                            return;
+                    }
+                    auto buffer = result.value();
+                    const auto deserialize_result =
+                        SCDData::deserialize(buffer);
+                    if (deserialize_result.failed()) {
+                            logging::logger().println(
+                                logging::LogLevel::Error, TAG,
+                                deserialize_result.error());
+                            return;
+                    }
+                    const auto &data = deserialize_result.value();
+                    logging::logger().println_fmt(
+                        logging::LogLevel::Info,
+                        "SCD co2: {} temp: {:.2f} humidity: {:.2f} error: {}",
+                        data.co2, data.temperature, data.humidity, data.error);
+            });
 
-        xTaskCreate([](void *arg) {
-                auto *hal = static_cast<serial::SerialHal *>(arg);
-                while (true) {
-                        hal->loop();
-                }
-        }, "serial", 8192, &serial_hal, 5, nullptr);
+        xTaskCreate(
+            [](void *arg) {
+                    auto *hal = static_cast<serial::SerialHal *>(arg);
+                    while (true) {
+                            hal->loop();
+                    }
+            },
+            "serial", 8192, &serial_hal, 5, nullptr);
 
         vTaskDelete(nullptr);
 
