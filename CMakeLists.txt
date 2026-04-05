@@ -21,6 +21,7 @@ if(ESP_PLATFORM)
         ${PONS_DIR}/transport/chunked_transport
         ${PONS_DIR}/transport/chunked_transport/ble_transport
         ${PONS_DIR}/transport/chunked_transport/serial_transport
+        ${PONS_DIR}/transport/chunked_transport/direct_transport
         components/communication
     )
     add_compile_definitions(PLATFORM_FREERTOS)

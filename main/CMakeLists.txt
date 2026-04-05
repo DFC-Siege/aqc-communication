@@ -14,6 +14,7 @@ else()
         posix_serial_hal
         dispatcher
         serial_transporter
+        direct_transporter
         chunked_transporter
         transporter
     )
