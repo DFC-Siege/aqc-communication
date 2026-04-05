@@ -17,6 +17,7 @@
 #include "result.hpp"
 #include "serial_hal.hpp"
 #include "serial_transporter.hpp"
+#include "serializer.hpp"
 
 static constexpr auto TAG = "main";
 
@@ -28,6 +29,38 @@ enum Channel : transport::TransporterId {
 enum Command : transport::CommandId {
         Ping,
 };
+
+struct PingMessage {
+        uint32_t sequence;
+        uint32_t timestamp;
+
+        serializer::Data serialize() const {
+                serializer::Writer w;
+                w.write(sequence);
+                w.write(timestamp);
+                return std::move(w.buf);
+        }
+
+        static result::Result<PingMessage> deserialize(std::span<const uint8_t> buf) {
+                serializer::Reader r{buf};
+                return result::ok(PingMessage{
+                        .sequence = TRY(r.read<uint32_t>()),
+                        .timestamp = TRY(r.read<uint32_t>()),
+                });
+        }
+};
+
+static_assert(serializer::Serializable<PingMessage>);
+
+static result::Result<bool> handle_ping(result::Result<transport::Data> result) {
+        const auto data = TRY(result);
+        const auto ping = TRY(PingMessage::deserialize(data));
+        logging::logger().println(
+            logging::LogLevel::Info, TAG,
+            "ping seq=" + std::to_string(ping.sequence) +
+                " ts=" + std::to_string(ping.timestamp));
+        return result::ok();
+}
 
 int main(int argc, char *argv[]) {
         auto logger = std::make_unique<logging::ConsoleLogger>();
@@ -67,51 +100,25 @@ int main(int argc, char *argv[]) {
         dispatcher.register_transporter(Channel::Direct, std::move(direct));
 
         dispatcher.register_handler(
-            Command::Ping, [](result::Result<transport::Data> result) {
-                    if (result.failed()) {
-                            logging::logger().println(logging::LogLevel::Error,
-                                                      TAG, result.error());
-                            return;
-                    }
-                    const auto data = std::move(result).value();
-                    logging::logger().println(
-                        logging::LogLevel::Info, TAG,
-                        std::string(data.begin(), data.end()));
-            });
+                Command::Ping, [](result::Result<transport::Data> result) {
+                        const auto r = handle_ping(std::move(result));
+                        if (r.failed()) {
+                                logging::logger().println(logging::LogLevel::Error,
+                                                          TAG, r.error());
+                        }
+                });
 
-        static constexpr std::string_view msg =
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do "
-            "eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut "
-            "enim ad minim veniam, quis nostrud exercitation ullamco laboris "
-            "nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor "
-            "in reprehenderit in voluptate velit esse cillum dolore eu fugiat "
-            "nulla pariatur. Excepteur sint occaecat cupidatat non proident, "
-            "sunt in culpa qui officia deserunt mollit anim id est laborum. "
-            "Sed ut perspiciatis unde omnis iste natus error sit voluptatem "
-            "accusantium doloremque laudantium, totam rem aperiam, eaque ipsa "
-            "quae ab illo inventore veritatis et quasi architecto beatae vitae "
-            "dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas "
-            "sit aspernatur aut odit aut fugit, sed quia consequuntur magni "
-            "dolores eos qui ratione voluptatem sequi nesciunt. Neque porro "
-            "quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, "
-            "adipisci velit, sed quia non numquam eius modi tempora incidunt "
-            "ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim "
-            "ad minima veniam, quis nostrum exercitationem ullam corporis "
-            "suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur. "
-            "Quis autem vel eum iure reprehenderit qui in ea voluptate velit "
-            "esse quam nihil molestiae consequatur, vel illum qui dolorem eum ";
+        const PingMessage msg{.sequence = 1, .timestamp = 42};
         const auto send_result =
-            dispatcher.send(Channel::Chunked, Command::Ping,
-                            transport::Data(msg.begin(), msg.end()));
+            dispatcher.send(Channel::Chunked, Command::Ping, msg.serialize());
         if (send_result.failed()) {
                 logging::logger().println(logging::LogLevel::Error, TAG,
                                           send_result.error());
         }
 
-        static constexpr std::string_view msg2 = "yee";
+        const PingMessage msg2{.sequence = 2, .timestamp = 43};
         const auto send_result2 =
-            dispatcher.send(Channel::Direct, Command::Ping,
-                            transport::Data(msg2.begin(), msg2.end()));
+            dispatcher.send(Channel::Direct, Command::Ping, msg2.serialize());
         if (send_result2.failed()) {
                 logging::logger().println(logging::LogLevel::Error, TAG,
                                           send_result2.error());

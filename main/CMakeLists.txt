@@ -6,6 +6,7 @@ if(ESP_PLATFORM)
                 logger
                 console_logger
                 result
+                serializer
                 esp32_serial_hal
                 dispatcher
                 serial_transporter
@@ -19,6 +20,7 @@ else()
         logger
         console_logger
         result
+        serializer
         posix_serial_hal
         dispatcher
         serial_transporter
