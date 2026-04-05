@@ -6,6 +6,8 @@ if(ESP_PLATFORM)
         ${PONS_DIR}/core/logger
         ${PONS_DIR}/core/logger/console_logger
         ${PONS_DIR}/core/serializer
+        ${PONS_DIR}/core/mutex
+        ${PONS_DIR}/platform
         ${PONS_DIR}/hal/store
         ${PONS_DIR}/hal/esp32/esp32_store/nvs_store
         ${PONS_DIR}/hal/esp32/esp32_ble_hal
