@@ -41,7 +41,7 @@ struct PingMessage {
                 return std::move(w.buf);
         }
 
-        static result::Result<PingMessage> deserialize(std::span<const uint8_t> buf) {
+        static result::Result<PingMessage> deserialize(serializer::DataView buf) {
                 serializer::Reader r{buf};
                 return result::ok(PingMessage{
                         .sequence = TRY(r.read<uint32_t>()),
