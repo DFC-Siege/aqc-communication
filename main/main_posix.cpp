@@ -45,20 +45,20 @@ int main(int argc, char *argv[]) {
 
         serial::SerialHal serial_hal(DEVICE);
         transport::SerialTransporter serial_transporter(serial_hal, MTU);
-        transport::Multiplexer<transport::SerialTransporter,
-                               transport::BaseTransporter>
-            multiplexer(serial_transporter);
-        auto chunked_channel = multiplexer.create_channel(Channel::Chunked);
-        transport::ChunkedTransporter chunked_transporter(chunked_channel,
-                                                          MAX_TRIES);
+        transport::Multiplexer multiplexer(serial_transporter);
 
-        transport::Dispatcher dispatcher(chunked_channel);
+        using MuxChannel =
+            transport::Multiplexer<transport::SerialTransporter>::InnerChannel;
+        using ChunkedMuxChannel = transport::ChunkedTransporter<MuxChannel>;
 
-        static constexpr std::string_view msg =
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do "
-            "eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut "
-            "enim ad minim veniam, quis nostrud exercitation ullamco laboris "
-            "nisi ut aliquip ex ea commodo consequat.";
+        auto &inner_channel =
+            multiplexer.create_inner_channel(Channel::Chunked);
+        auto chunked =
+            std::make_unique<ChunkedMuxChannel>(inner_channel, MAX_TRIES);
+        auto &channel =
+            multiplexer.register_channel(Channel::Chunked, std::move(chunked));
+
+        transport::Dispatcher dispatcher(channel);
 
         dispatcher.register_handler(
             Command::Ping, [](result::Result<transport::Data> result) {
@@ -73,6 +73,11 @@ int main(int argc, char *argv[]) {
                         std::string(data.begin(), data.end()));
             });
 
+        static constexpr std::string_view msg =
+            "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do "
+            "eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut "
+            "enim ad minim veniam, quis nostrud exercitation ullamco laboris "
+            "nisi ut aliquip ex ea commodo consequat.";
         const auto send_result = dispatcher.send(
             Command::Ping, transport::Data(msg.begin(), msg.end()));
         if (send_result.failed()) {
