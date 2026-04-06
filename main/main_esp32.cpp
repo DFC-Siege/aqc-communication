@@ -66,8 +66,8 @@ extern "C" void app_main() {
         logging::Logger::set(std::move(logger));
 
         static constexpr auto MTU = 17;
-        static constexpr auto MAX_TRIES = 1;
-        static constexpr auto TIMEOUT = std::chrono::milliseconds(10000);
+        static constexpr auto MAX_TRIES = 3;
+        static constexpr auto TIMEOUT = std::chrono::milliseconds(1000);
 
         static constexpr auto BAUDRATE = 115200;
         static constexpr auto BUFFER_SIZE = 1024;
