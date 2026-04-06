@@ -41,24 +41,25 @@ struct PingMessage {
                 return std::move(w.buf);
         }
 
-        static result::Result<PingMessage> deserialize(serializer::DataView buf) {
+        static result::Result<PingMessage>
+        deserialize(serializer::DataView buf) {
                 serializer::Reader r{buf};
                 return result::ok(PingMessage{
-                        .sequence = TRY(r.read<uint32_t>()),
-                        .timestamp = TRY(r.read<uint32_t>()),
+                    .sequence = TRY(r.read<uint32_t>()),
+                    .timestamp = TRY(r.read<uint32_t>()),
                 });
         }
 };
 
 static_assert(serializer::Serializable<PingMessage>);
 
-static result::Result<bool> handle_ping(result::Result<transport::Data> result) {
+static result::Result<bool>
+handle_ping(result::Result<transport::Data> result) {
         const auto data = TRY(result);
         const auto ping = TRY(PingMessage::deserialize(data));
-        logging::logger().println(
-            logging::LogLevel::Info, TAG,
-            "ping seq=" + std::to_string(ping.sequence) +
-                " ts=" + std::to_string(ping.timestamp));
+        logging::logger().println(logging::LogLevel::Info, TAG,
+                                  "ping seq=" + std::to_string(ping.sequence) +
+                                      " ts=" + std::to_string(ping.timestamp));
         return result::ok();
 }
 
@@ -73,11 +74,17 @@ int main(int argc, char *argv[]) {
                 return 1;
         }
 
-        const auto DEVICE = argv[1];
-        static constexpr uint16_t MTU = 255;
-        static constexpr uint16_t MAX_TRIES = 1;
+        static constexpr auto MTU = 17;
+        static constexpr auto MAX_TRIES = 1;
+        static constexpr auto TIMEOUT = std::chrono::milliseconds(10000);
 
-        serial::SerialHal serial_hal(DEVICE);
+        static constexpr auto BAUDRATE = 115200;
+        static constexpr auto BUFFER_SIZE = 1024;
+        static constexpr auto UART = UART_NUM_1;
+        static constexpr auto TX_PIN = 7;
+        static constexpr auto RX_PIN = 6;
+        serial::SerialHal serial_hal(UART, TX_PIN, RX_PIN, BAUDRATE,
+                                     BUFFER_SIZE);
         transport::SerialTransporter serial_transporter(serial_hal, MTU);
         transport::Multiplexer multiplexer(serial_transporter);
 
@@ -89,7 +96,7 @@ int main(int argc, char *argv[]) {
         auto &inner_chunked_channel =
             multiplexer.create_inner_channel(Channel::Chunked);
         auto chunked = std::make_unique<ChunkedMuxChannel>(
-            inner_chunked_channel, MAX_TRIES);
+            inner_chunked_channel, MAX_TRIES, TIMEOUT);
 
         auto &inner_direct_channel =
             multiplexer.create_inner_channel(Channel::Direct);
@@ -100,13 +107,13 @@ int main(int argc, char *argv[]) {
         dispatcher.register_transporter(Channel::Direct, std::move(direct));
 
         dispatcher.register_handler(
-                Command::Ping, [](result::Result<transport::Data> result) {
-                        const auto r = handle_ping(std::move(result));
-                        if (r.failed()) {
-                                logging::logger().println(logging::LogLevel::Error,
-                                                          TAG, r.error());
-                        }
-                });
+            Command::Ping, [](result::Result<transport::Data> result) {
+                    const auto r = handle_ping(std::move(result));
+                    if (r.failed()) {
+                            logging::logger().println(logging::LogLevel::Error,
+                                                      TAG, r.error());
+                    }
+            });
 
         const PingMessage msg{.sequence = 1, .timestamp = 42};
         const auto send_result =

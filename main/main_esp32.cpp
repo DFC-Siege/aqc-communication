@@ -62,7 +62,7 @@ struct SCDData {
 
 extern "C" void app_main() {
         auto logger = std::make_unique<logging::ConsoleLogger>();
-        logger->set_level(logging::LogLevel::Verbose);
+        logger->set_level(logging::LogLevel::Info);
         logging::Logger::set(std::move(logger));
 
         static constexpr auto MTU = 17;
