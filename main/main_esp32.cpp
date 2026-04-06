@@ -62,12 +62,12 @@ struct SCDData {
 
 extern "C" void app_main() {
         auto logger = std::make_unique<logging::ConsoleLogger>();
-        logger->set_level(logging::LogLevel::Info);
+        logger->set_level(logging::LogLevel::Verbose);
         logging::Logger::set(std::move(logger));
 
-        static constexpr uint16_t MTU = 17;
-        static constexpr uint16_t MAX_TRIES = 1;
-        static constexpr uint16_t TIMEOUT = 1000;
+        static constexpr auto MTU = 17;
+        static constexpr auto MAX_TRIES = 1;
+        static constexpr auto TIMEOUT = std::chrono::milliseconds(10000);
 
         static constexpr auto BAUDRATE = 115200;
         static constexpr auto BUFFER_SIZE = 1024;
