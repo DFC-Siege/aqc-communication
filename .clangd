@@ -11,7 +11,7 @@ CompileFlags:
       -mfix-esp32-psram-cache-strategy*,
       -fstack-protector,
       -fexceptions,
+      -mtune=*,
     ]
-
 Diagnostics:
   UnusedIncludes: None
