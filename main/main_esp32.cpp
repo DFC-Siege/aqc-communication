@@ -77,7 +77,7 @@ extern "C" void app_main() {
         serial::SerialHal serial_hal(UART, TX_PIN, RX_PIN, BAUDRATE,
                                      BUFFER_SIZE);
         transport::SerialTransporter serial_transporter(serial_hal, MTU);
-        transport::Multiplexer multiplexer(serial_transporter);
+        transport::Multiplexer multiplexer(std::move(serial_transporter));
 
         using MuxChannel =
             transport::Multiplexer<transport::SerialTransporter>::InnerChannel;
@@ -87,11 +87,12 @@ extern "C" void app_main() {
         auto &inner_chunked_channel =
             multiplexer.create_inner_channel(Channel::Chunked);
         auto chunked = std::make_unique<ChunkedMuxChannel>(
-            inner_chunked_channel, MAX_TRIES, TIMEOUT);
+            std::move(inner_chunked_channel), MAX_TRIES, TIMEOUT);
 
         auto &inner_direct_channel =
             multiplexer.create_inner_channel(Channel::Direct);
-        auto direct = std::make_unique<DirectMuxChannel>(inner_direct_channel);
+        auto direct =
+            std::make_unique<DirectMuxChannel>(std::move(inner_direct_channel));
 
         transport::Dispatcher<transport::BaseTransporter> dispatcher;
         dispatcher.register_transporter(Channel::Chunked, std::move(chunked));
