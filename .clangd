@@ -1,4 +1,5 @@
 CompileFlags:
+  CompilationDatabase: build
   Add: ["-Wno-unknown-argument"]
   Remove:
     [
