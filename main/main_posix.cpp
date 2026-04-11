@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <string>
 #include <string_view>
 #include <thread>
 #include <unordered_map>
@@ -14,6 +15,7 @@
 #include "i_logger.hpp"
 #include "logger.hpp"
 #include "multiplexer.hpp"
+#include "requester.hpp"
 #include "result.hpp"
 #include "serial_hal.hpp"
 #include "serial_transporter.hpp"
@@ -27,46 +29,42 @@ enum Channel : transport::TransporterId {
 };
 
 enum Command : transport::CommandId {
-        Ping,
+        SCD,
+        SCDRequest,
 };
 
-struct PingMessage {
-        uint32_t sequence;
-        uint32_t timestamp;
+struct SCDData {
+        uint16_t co2 = 0;
+        float temperature = 0.0f;
+        float humidity = 0.0f;
+        std::string error;
 
         serializer::Data serialize() const {
                 serializer::Writer w;
-                w.write(sequence);
-                w.write(timestamp);
+                w.write(co2);
+                w.write(temperature);
+                w.write(humidity);
+                w.write(error);
                 return std::move(w.buf);
         }
 
-        static result::Result<PingMessage>
-        deserialize(serializer::DataView buf) {
+        static result::Result<SCDData> deserialize(serializer::DataView buf) {
                 serializer::Reader r{buf};
-                return result::ok(PingMessage{
-                    .sequence = TRY(r.read<uint32_t>()),
-                    .timestamp = TRY(r.read<uint32_t>()),
+                return result::ok(SCDData{
+                    .co2 = TRY(r.read<uint16_t>()),
+                    .temperature = TRY(r.read<float>()),
+                    .humidity = TRY(r.read<float>()),
+                    .error = TRY(r.read_string()),
                 });
         }
 };
 
-static_assert(serializer::Serializable<PingMessage>);
-
-static result::Result<bool>
-handle_ping(result::Result<transport::Data> result) {
-        const auto data = TRY(result);
-        const auto ping = TRY(PingMessage::deserialize(data));
-        logging::logger().println(logging::LogLevel::Info, TAG,
-                                  "ping seq=" + std::to_string(ping.sequence) +
-                                      " ts=" + std::to_string(ping.timestamp));
-        return result::ok();
-}
+static_assert(serializer::Serializable<SCDData>);
 
 int main(int argc, char *argv[]) {
         auto logger = std::make_unique<logging::ConsoleLogger>();
         logger->set_level(logging::LogLevel::Info);
-        logging::Logger::set(std::move(logger));
+        logging::set_logger(std::move(logger));
 
         if (argc < 2) {
                 logging::logger().println(logging::LogLevel::Error, TAG,
@@ -77,55 +75,79 @@ int main(int argc, char *argv[]) {
         static constexpr auto MTU = 17;
         static constexpr auto MAX_TRIES = 1;
         static constexpr auto TIMEOUT = std::chrono::milliseconds(10000);
-        serial::SerialHal serial_hal("");
-        transport::SerialTransporter serial_transporter(serial_hal, MTU);
-        transport::Multiplexer multiplexer(serial_transporter);
+        serial::SerialHal serial_hal(argv[1]);
+        auto serial_transporter =
+            std::make_unique<transport::SerialTransporter>(serial_hal, MTU);
+        transport::Multiplexer multiplexer(std::move(serial_transporter));
 
         using MuxChannel =
             transport::Multiplexer<transport::SerialTransporter>::InnerChannel;
         using ChunkedMuxChannel = transport::ChunkedTransporter<MuxChannel>;
         using DirectMuxChannel = transport::DirectTransporter<MuxChannel>;
 
-        auto &inner_chunked_channel =
+        auto inner_chunked_channel =
             multiplexer.create_inner_channel(Channel::Chunked);
         auto chunked = std::make_unique<ChunkedMuxChannel>(
-            inner_chunked_channel, MAX_TRIES, TIMEOUT);
+            std::move(inner_chunked_channel), MAX_TRIES, TIMEOUT);
 
-        auto &inner_direct_channel =
+        auto inner_direct_channel =
             multiplexer.create_inner_channel(Channel::Direct);
-        auto direct = std::make_unique<DirectMuxChannel>(inner_direct_channel);
+        auto direct =
+            std::make_unique<DirectMuxChannel>(std::move(inner_direct_channel));
 
         transport::Dispatcher<transport::BaseTransporter> dispatcher;
         dispatcher.register_transporter(Channel::Chunked, std::move(chunked));
         dispatcher.register_transporter(Channel::Direct, std::move(direct));
 
-        dispatcher.register_handler(
-            Command::Ping, [](result::Result<transport::Data> result) {
-                    const auto r = handle_ping(std::move(result));
-                    if (r.failed()) {
-                            logging::logger().println(logging::LogLevel::Error,
-                                                      TAG, r.error());
-                    }
+        transport::Requester<transport::BaseTransporter> requester(dispatcher);
+
+        requester.register_requestable<SCDData, SCDData>(
+            Command::SCDRequest, Command::SCDRequest, Channel::Chunked,
+            [](SCDData query) -> result::Result<SCDData> {
+                    logging::logger().println(logging::LogLevel::Info, TAG,
+                                              "received SCDRequest");
+                    return result::ok(SCDData{
+                        .co2 = 420,
+                        .temperature = 23.5f,
+                        .humidity = 55.0f,
+                        .error = "",
+                    });
             });
 
-        const PingMessage msg{.sequence = 1, .timestamp = 42};
-        const auto send_result =
-            dispatcher.send(Channel::Chunked, Command::Ping, msg.serialize());
-        if (send_result.failed()) {
+        std::thread serial_thread([&] {
+                while (true) {
+                        serial_hal.loop();
+                        std::this_thread::sleep_for(
+                            std::chrono::milliseconds(1));
+                }
+        });
+
+        logging::logger().println(logging::LogLevel::Info, TAG,
+                                  "listening for requests...");
+
+        auto handle_result =
+            requester.send_request(Channel::Chunked, Command::SCDRequest,
+                                   Command::SCDRequest, SCDData{});
+        if (handle_result.failed()) {
                 logging::logger().println(logging::LogLevel::Error, TAG,
-                                          send_result.error());
+                                          handle_result.error());
+        } else {
+                logging::logger().println(
+                    logging::LogLevel::Info, TAG,
+                    "sent SCDRequest, awaiting response...");
+                auto data_result = handle_result.value()->await<SCDData>(
+                    std::chrono::milliseconds(5000));
+                if (data_result.failed()) {
+                        logging::logger().println(logging::LogLevel::Error, TAG,
+                                                  data_result.error());
+                } else {
+                        const auto &data = data_result.value();
+                        logging::logger().println_fmt(
+                            logging::LogLevel::Info,
+                            "SCDResponse co2: {} temp: {:.2f} humidity: {:.2f}",
+                            data.co2, data.temperature, data.humidity);
+                }
         }
 
-        const PingMessage msg2{.sequence = 2, .timestamp = 43};
-        const auto send_result2 =
-            dispatcher.send(Channel::Direct, Command::Ping, msg2.serialize());
-        if (send_result2.failed()) {
-                logging::logger().println(logging::LogLevel::Error, TAG,
-                                          send_result2.error());
-        }
-
-        while (true) {
-                serial_hal.loop();
-                std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        }
+        serial_thread.join();
 }
