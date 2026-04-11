@@ -15,6 +15,7 @@ if(ESP_PLATFORM)
                 transporter
                 esp_driver_uart
                 requester
+                semaphore
     )
 else()
     add_executable(communication main_posix.cpp)
@@ -30,6 +31,7 @@ else()
         chunked_transporter
         transporter
         requester
+        semaphore
     )
     target_compile_features(communication PRIVATE cxx_std_23)
 endif()
