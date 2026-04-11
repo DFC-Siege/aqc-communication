@@ -14,6 +14,7 @@ if(ESP_PLATFORM)
                 chunked_transporter
                 transporter
                 esp_driver_uart
+                requester
     )
 else()
     add_executable(communication main_posix.cpp)
@@ -28,6 +29,7 @@ else()
         direct_transporter
         chunked_transporter
         transporter
+        requester
     )
     target_compile_features(communication PRIVATE cxx_std_23)
 endif()

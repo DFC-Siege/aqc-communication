@@ -18,6 +18,7 @@
 #include "i_logger.hpp"
 #include "logger.hpp"
 #include "multiplexer.hpp"
+#include "requester.hpp"
 #include "result.hpp"
 #include "serial_hal.hpp"
 #include "serial_transporter.hpp"
@@ -32,6 +33,7 @@ enum Channel : transport::TransporterId {
 
 enum Command : transport::CommandId {
         SCD,
+        SCDRequest,
 };
 
 struct SCDData {
@@ -121,6 +123,10 @@ extern "C" void app_main() {
                         data.co2, data.temperature, data.humidity, data.error);
             });
 
+        transport::Requester<transport::BaseTransporter> requester(dispatcher);
+        auto handle_result =
+            requester.send_request(Channel::Chunked, Command::SCDRequest,
+                                   Command::SCDRequest, SCDData());
         xTaskCreate(
             [](void *arg) {
                     auto *hal = static_cast<serial::SerialHal *>(arg);
@@ -130,7 +136,23 @@ extern "C" void app_main() {
             },
             "serial", 8192, &serial_hal, 5, nullptr);
 
-        vTaskDelete(nullptr);
+        if (handle_result.failed()) {
+                logging::logger().println(logging::LogLevel::Error, TAG,
+                                          handle_result.error());
+        } else {
+                auto data_result = handle_result.value()->await<SCDData>(
+                    std::chrono::milliseconds(1000));
+                if (data_result.failed()) {
+                        logging::logger().println(logging::LogLevel::Error, TAG,
+                                                  data_result.error());
+                } else {
+                        const auto &data = data_result.value();
+                        logging::logger().println_fmt(
+                            logging::LogLevel::Info,
+                            "SCD co2: {} temp: {:.2f} humidity: {:.2f}",
+                            data.co2, data.temperature, data.humidity);
+                }
+        }
 
         while (true) {
                 vTaskDelay(pdMS_TO_TICKS(1));

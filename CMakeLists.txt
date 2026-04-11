@@ -18,6 +18,7 @@ if(ESP_PLATFORM)
         ${PONS_DIR}/hal/http_client
         ${PONS_DIR}/transport
         ${PONS_DIR}/transport/dispatcher
+        ${PONS_DIR}/transport/requester
         ${PONS_DIR}/transport/transporter
         ${PONS_DIR}/transport/transporter/chunked_transporter
         ${PONS_DIR}/transport/transporter/direct_transporter
