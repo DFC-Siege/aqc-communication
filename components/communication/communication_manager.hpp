@@ -1,26 +1,30 @@
 #pragma once
+
+#include <memory>
+#include <utility>
+
 #include "base_transporter.hpp"
 #include "chunked_transporter.hpp"
 #include "direct_transporter.hpp"
 #include "dispatcher.hpp"
 #include "handler_factory.hpp"
-#include "i_serial_hal.hpp"
 #include "multiplexer.hpp"
+#include "serial_hal.hpp"
 #include "serial_transporter.hpp"
 #include "serialized_dispatcher.hpp"
-#include <memory>
-#include <utility>
+
 namespace communication {
 enum Channel : transport::TransporterId {
         Chunked,
         Direct,
 };
-class CommunicationManager {
+
+template <serial::SerialHal S> class CommunicationManager {
       public:
-        CommunicationManager(serial::ISerialHal &serial_hal,
+        CommunicationManager(S &serial_hal,
                              handlers::HandlerFactory &&handler_factory)
             : handler_factory(std::move(handler_factory)),
-              multiplexer(std::make_unique<transport::SerialTransporter>(
+              multiplexer(std::make_unique<transport::SerialTransporter<S>>(
                   serial_hal, MTU)) {
                 auto inner_chunked_channel =
                     multiplexer.create_inner_channel(Channel::Chunked);
@@ -52,13 +56,13 @@ class CommunicationManager {
         static constexpr auto MAX_TRIES = 3;
         static constexpr auto TIMEOUT = std::chrono::milliseconds(1000);
 
-        using MuxChannel =
-            transport::Multiplexer<transport::SerialTransporter>::InnerChannel;
+        using MuxChannel = transport::Multiplexer<
+            transport::SerialTransporter<S>>::InnerChannel;
         using ChunkedMuxChannel = transport::ChunkedTransporter<MuxChannel>;
         using DirectMuxChannel = transport::DirectTransporter<MuxChannel>;
 
         handlers::HandlerFactory handler_factory;
-        transport::Multiplexer<transport::SerialTransporter> multiplexer;
+        transport::Multiplexer<transport::SerialTransporter<S>> multiplexer;
         std::unique_ptr<
             transport::SerializedDispatcher<transport::BaseTransporter>>
             serialized_dispatcher;

@@ -12,8 +12,8 @@
 #include "handler_factory.hpp"
 #include "i_logger.hpp"
 #include "logger.hpp"
+#include "posix_serial_hal.hpp"
 #include "result.hpp"
-#include "serial_hal.hpp"
 
 static constexpr logging::Tag TAG = "main";
 
@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
         static constexpr auto MTU = 17;
         static constexpr auto MAX_TRIES = 1;
         static constexpr auto TIMEOUT = std::chrono::milliseconds(10000);
-        serial::SerialHal serial_hal(argv[1]);
+        serial::PosixSerialHal serial_hal(argv[1]);
         handlers::HandlerFactory handler_factory;
         communication::CommunicationManager communication_manager(
             serial_hal, std::move(handler_factory));
