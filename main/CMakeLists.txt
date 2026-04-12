@@ -23,21 +23,21 @@ if(ESP_PLATFORM)
 else()
     add_executable(communication main_posix.cpp)
     target_link_libraries(communication PRIVATE
-        logger
-        console_logger
-        result
-        serializer
-        posix_serial_hal
-        dispatcher
-        serial_transporter
-        direct_transporter
-        chunked_transporter
-        transporter
-        requester
-        semaphore
-        models
-        handlers
-        communication_lib
+                logger
+                console_logger
+                result
+                serializer
+                posix_serial_hal
+                dispatcher
+                serial_transporter
+                direct_transporter
+                chunked_transporter
+                transporter
+                requester
+                semaphore
+                models
+                handlers
+                communication_lib
     )
     target_compile_features(communication PRIVATE cxx_std_23)
 endif()
