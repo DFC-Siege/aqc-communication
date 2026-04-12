@@ -41,6 +41,7 @@ class CommunicationManager {
                         transport::BaseTransporter>>(std::move(dispatcher));
                 this->handler_factory.register_handlers(*serialized_dispatcher);
         }
+
         transport::SerializedDispatcher<transport::BaseTransporter> &
         get_dispatcher() {
                 return *serialized_dispatcher;
