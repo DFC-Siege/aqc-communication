@@ -27,6 +27,7 @@ if(ESP_PLATFORM)
         ${CMAKE_CURRENT_SOURCE_DIR}/models
         ${CMAKE_CURRENT_SOURCE_DIR}/components/handlers
         ${CMAKE_CURRENT_SOURCE_DIR}/components/handlers/scd40_handler
+        ${CMAKE_CURRENT_SOURCE_DIR}/components/handlers/sps30_handler
         ${CMAKE_CURRENT_SOURCE_DIR}/components/communication
     )
     add_compile_definitions(PLATFORM_FREERTOS)

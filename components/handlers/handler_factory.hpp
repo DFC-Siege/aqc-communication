@@ -2,8 +2,11 @@
 
 #include "base_transporter.hpp"
 #include "commands.hpp"
-#include "dispatcher.hpp"
+#include "scd40.hpp"
 #include "scd40_handler.hpp"
+#include "serialized_dispatcher.hpp"
+#include "sps30.hpp"
+#include "sps30_handler.hpp"
 
 namespace handlers {
 class HandlerFactory {
@@ -12,8 +15,12 @@ class HandlerFactory {
         }
 
         void register_handlers(
-            transport::Dispatcher<transport::BaseTransporter> &dispatcher) {
-                dispatcher.register_handler(models::Command::SCD, handle_scd);
+            transport::SerializedDispatcher<transport::BaseTransporter>
+                &dispatcher) {
+                dispatcher.register_handler<models::SCD40>(models::Command::SCD,
+                                                           scd40::handle);
+                dispatcher.register_handler<models::SPS30>(models::Command::SPS,
+                                                           sps30::handle);
         }
 };
 } // namespace handlers

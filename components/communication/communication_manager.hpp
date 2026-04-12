@@ -11,6 +11,7 @@
 #include "i_serial_hal.hpp"
 #include "multiplexer.hpp"
 #include "serial_transporter.hpp"
+#include "serialized_dispatcher.hpp"
 
 namespace communication {
 enum Channel : transport::TransporterId {
@@ -50,20 +51,27 @@ class CommunicationManager {
                 auto direct = std::make_unique<DirectMuxChannel>(
                     std::move(inner_direct_channel));
 
-                dispatcher.register_transporter(Channel::Chunked,
-                                                std::move(chunked));
-                dispatcher.register_transporter(Channel::Direct,
-                                                std::move(direct));
+                auto dispatcher = std::make_unique<
+                    transport::Dispatcher<transport::BaseTransporter>>();
+                dispatcher->register_transporter(Channel::Chunked,
+                                                 std::move(chunked));
+                dispatcher->register_transporter(Channel::Direct,
+                                                 std::move(direct));
 
-                handler_factory.register_handlers(dispatcher);
+                std::make_unique<transport::SerializedDispatcher<
+                    transport::BaseTransporter>>(std::move(dispatcher));
+                handler_factory.register_handlers(*serialized_dispatcher);
         }
 
-        transport::Dispatcher<transport::BaseTransporter> &get_dispatcher() {
-                return dispatcher;
+        transport::SerializedDispatcher<transport::BaseTransporter> &
+        get_dispatcher() {
+                return *serialized_dispatcher;
         }
 
       private:
         handlers::HandlerFactory handler_factory;
-        transport::Dispatcher<transport::BaseTransporter> dispatcher;
+        std::unique_ptr<
+            transport::SerializedDispatcher<transport::BaseTransporter>>
+            serialized_dispatcher;
 };
 } // namespace communication
