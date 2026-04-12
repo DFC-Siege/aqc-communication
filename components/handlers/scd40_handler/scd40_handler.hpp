@@ -17,7 +17,10 @@ inline static void handle(result::Result<models::SCD40> result) {
                 return;
         }
 
-        logging::logger().println_fmt("todo");
+        auto &data = result.value();
+        logging::logger().println_fmt(
+            "SCD40 - CO2: %d ppm, Temp: %.2f C, Humidity: %.2f%%", data.co2,
+            data.temperature, data.humidity);
 }
 } // namespace scd40
 } // namespace handlers

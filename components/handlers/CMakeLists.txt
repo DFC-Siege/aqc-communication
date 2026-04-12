@@ -1,8 +1,7 @@
 if(ESP_PLATFORM)
     idf_component_register(
         INCLUDE_DIRS "."
-        scd40_handler
-        sps30_handler
+        REQUIRES scd40_handler sps30_handler
     )
 else()
     add_library(handlers INTERFACE)
