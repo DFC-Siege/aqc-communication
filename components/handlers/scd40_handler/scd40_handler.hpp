@@ -10,7 +10,7 @@ namespace handlers {
 namespace scd40 {
 static constexpr auto TAG = "scd40_handler";
 
-static void handle(result::Result<models::SCD40> result) {
+inline static void handle(result::Result<models::SCD40> result) {
         if (result.failed()) {
                 logging::logger().println(logging::LogLevel::Error, TAG,
                                           result.error());
