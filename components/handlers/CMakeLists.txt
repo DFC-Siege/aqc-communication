@@ -1,0 +1,9 @@
+if(ESP_PLATFORM)
+    idf_component_register(
+        INCLUDE_DIRS "."
+        scd40_handler
+    )
+else()
+    add_library(handlers INTERFACE)
+    target_include_directories(handlers INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+endif()

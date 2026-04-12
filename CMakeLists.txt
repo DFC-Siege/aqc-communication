@@ -24,6 +24,10 @@ if(ESP_PLATFORM)
         ${PONS_DIR}/transport/transporter/chunked_transporter
         ${PONS_DIR}/transport/transporter/direct_transporter
         ${PONS_DIR}/transport/transporter/serial_transporter
+        ${CMAKE_CURRENT_SOURCE_DIR}/models
+        ${CMAKE_CURRENT_SOURCE_DIR}/components/handlers
+        ${CMAKE_CURRENT_SOURCE_DIR}/components/handlers/scd40_handler
+        ${CMAKE_CURRENT_SOURCE_DIR}/components/communication
     )
     add_compile_definitions(PLATFORM_FREERTOS)
     include($ENV{IDF_PATH}/tools/cmake/project.cmake)
@@ -31,5 +35,10 @@ if(ESP_PLATFORM)
 else()
     project(communication CXX)
     add_subdirectory(../../pons ${CMAKE_BINARY_DIR}/pons)
+    add_subdirectory(models)
+    add_subdirectory(components/handlers)
+    add_subdirectory(components/handlers/scd)
+    add_subdirectory(components/handlers/sps)
+    add_subdirectory(components/communication)
     add_subdirectory(main)
 endif()

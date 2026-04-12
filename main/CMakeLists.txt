@@ -16,6 +16,9 @@ if(ESP_PLATFORM)
                 esp_driver_uart
                 requester
                 semaphore
+                models
+                handlers
+                communication
     )
 else()
     add_executable(communication main_posix.cpp)
@@ -32,6 +35,9 @@ else()
         transporter
         requester
         semaphore
+        models
+        handlers
+        communication_lib
     )
     target_compile_features(communication PRIVATE cxx_std_23)
 endif()
