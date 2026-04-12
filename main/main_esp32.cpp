@@ -44,6 +44,6 @@ extern "C" void app_main() {
             "serial", 8192, &serial_hal, 5, nullptr);
 
         while (true) {
-                vTaskDelay(pdMS_TO_TICKS(1));
+                vTaskDelay(portMAX_DELAY);
         }
 }

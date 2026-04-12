@@ -19,7 +19,7 @@ inline static void handle(result::Result<models::SCD40> result) {
 
         auto &data = result.value();
         logging::logger().println_fmt(
-            "SCD40 - CO2: %d ppm, Temp: %.2f C, Humidity: %.2f%%", data.co2,
+            "SCD40 - CO2: {} ppm, Temp: {:.2f}°C, Humidity: {:.2f}%", data.co2,
             data.temperature, data.humidity);
 }
 } // namespace scd40

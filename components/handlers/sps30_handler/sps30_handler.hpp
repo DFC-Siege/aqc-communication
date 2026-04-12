@@ -18,8 +18,8 @@ inline static void handle(result::Result<models::SPS30> result) {
         }
 
         auto &data = result.value();
-        logging::logger().println_fmt("SPS30 - PM1.0: %.2f, PM2.5: %.2f, "
-                                      "PM4.0: %.2f, PM10.0: %.2f, Size: %.2f",
+        logging::logger().println_fmt("SPS30 - PM1.0: {:.2f}, PM2.5: {:.2f}, "
+                                      "PM4.0: {:.2f}, PM10.0: {:.2f}, Size: {:.2f}",
                                       data.pm1_0, data.pm2_5, data.pm4_0,
                                       data.pm10_0, data.typical_particle_size);
 }
