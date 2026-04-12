@@ -15,7 +15,7 @@
 #include "result.hpp"
 #include "serial_hal.hpp"
 
-static constexpr auto TAG = "main";
+static constexpr logging::Tag TAG = "main";
 
 int main(int argc, char *argv[]) {
         auto logger = std::make_unique<logging::ConsoleLogger>();
